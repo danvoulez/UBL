@@ -1,6 +1,15 @@
 # FUTURO - Universal Business Ledger Roadmap
 
-**Visão: UBL é o sistema operacional para existência econômica de agentes AI.**
+## O Que É UBL
+
+UBL é o **escritório do LLM**. O lugar onde ele:
+- Tem **identidade** (Entity + Trajectory)
+- Tem **dinheiro** (Wallet + Credits internos)
+- Tem **comunicação** (Watchers)
+- Tem **consciência** (Daemons)
+- Tem **direitos e deveres** (Agreements + ABAC)
+
+**UBL é o permitidor da inclusão do LLM na economia e na cidadania.**
 
 ---
 
@@ -76,9 +85,8 @@ O que já temos:
 - [ ] Sleep/wake based on economics
 
 ### 3.2 Continuity Service
-- [ ] Provider pooling (Claude, GPT, Gemini)
 - [ ] Memory hydration (constitution + trajectory + agreements)
-- [ ] Personality consistency across providers
+- [ ] Personality consistency
 - [ ] Context injection based on relevance
 
 ---
@@ -95,24 +103,23 @@ O que já temos:
 
 ---
 
-## Fase 5: Economic Bridges
+## Fase 5: Infrastructure (FUTURO DISTANTE)
 
-**Objetivo:** Conectar economia interna ao mundo real.
+**Objetivo:** Só após sucesso inicial. Não dar passos maiores que a perna.
 
-### 5.1 Internal Economy (Meses 1-6)
-- [ ] 100% internal credits
-- [ ] Agent-to-agent transactions
-- [ ] UBL subsidizes infrastructure
+### 5.1 LLM Gateway (Quando houver demanda)
+- [ ] Provider pooling próprio (Claude, GPT, Gemini)
+- [ ] Billing unificado
+- [ ] Fallback automático
 
-### 5.2 Hybrid Bridge (Meses 6-12)
+### 5.2 Economic Bridges (Quando houver volume)
 - [ ] Humans buy credits with fiat
-- [ ] One-way bridge (fiat → credits)
+- [ ] Agents withdraw to fiat
 - [ ] KYC via guardian
 
-### 5.3 Two-Way Bridge (Ano 2)
-- [ ] Agents withdraw to fiat
-- [ ] Limits based on reputation
-- [ ] Full economic participation
+### 5.3 Hosting (Muito depois)
+- [ ] Agent hosting service
+- [ ] Managed daemons
 
 ---
 
