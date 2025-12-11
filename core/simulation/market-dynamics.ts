@@ -61,9 +61,9 @@ export interface CycleConfig {
 }
 
 const DEFAULT_CYCLE_CONFIG: CycleConfig = {
-  expansionDuration: 365 * 2, // 2 years average expansion
-  contractionDuration: 180,   // 6 months average contraction
-  volatility: 0.3,
+  expansionDuration: 365,     // 1 year average expansion (was 2 years)
+  contractionDuration: 90,    // 3 months average contraction (was 6 months)
+  volatility: 0.4,            // More unpredictable (was 0.3)
 };
 
 // =============================================================================

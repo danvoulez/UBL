@@ -186,6 +186,8 @@ export class ChaosInjector {
   // TICK PROCESSING
   // ---------------------------------------------------------------------------
   
+  private lastProcessedDay: number = -1;
+  
   /** Process chaos for current tick */
   async processTick(
     tick: SimulationTick,
@@ -193,10 +195,16 @@ export class ChaosInjector {
   ): Promise<ChaosEffect[]> {
     const effects: ChaosEffect[] = [];
     const currentDay = tick.simulatedDay;
+    const lastDay = this.lastProcessedDay;
+    this.lastProcessedDay = currentDay;
     
-    // Check scheduled events
+    // Check scheduled events - use RANGE to catch skipped days
     for (const event of this.config.scheduledEvents) {
-      if (event.triggerAt === currentDay && !this.isEventActive(event)) {
+      // Trigger if event day is between last processed day and current day
+      const shouldTrigger = event.triggerAt > lastDay && 
+                            event.triggerAt <= currentDay && 
+                            !this.isEventActive(event);
+      if (shouldTrigger) {
         const effect = await this.triggerEvent(event, tick, population);
         effects.push(effect);
       }

@@ -240,10 +240,15 @@ export class RealisticBehaviorEngine {
     const marketInfluence = market.sentiment * (1 - script.traits.adaptability * 0.5);
     psych.mood += (marketInfluence - psych.mood) * 0.1;
     
+    // Mood recovery when no crisis (slow healing)
+    if (market.sentiment > 0 && psych.mood < 0) {
+      psych.mood += 0.005; // Slow natural recovery
+    }
+    
     // Stress from financial pressure
     const financialStress = Number(script.state.loanOutstanding) / 
       Math.max(1, Number(script.state.walletBalance) + 100);
-    psych.stress = Math.min(1, psych.stress * 0.95 + financialStress * 0.1);
+    psych.stress = psych.stress * 0.95 + financialStress * 0.1;
     
     // Confidence from reputation
     const reputationConfidence = script.state.reputation / 100;
@@ -253,9 +258,9 @@ export class RealisticBehaviorEngine {
     const successfulPeers = peers.filter(p => p.balance > Number(script.state.walletBalance) * 1.5);
     psych.fomo = Math.min(1, successfulPeers.length / Math.max(1, peers.length));
     
-    // Clamp values
+    // Clamp values - STRESS CAPPED AT 1.0
     psych.mood = Math.max(-1, Math.min(1, psych.mood));
-    psych.stress = Math.max(0, Math.min(1, psych.stress));
+    psych.stress = Math.max(0, Math.min(1, psych.stress)); // Cap at 100%
     psych.confidence = Math.max(0, Math.min(1, psych.confidence));
   }
   
@@ -285,16 +290,32 @@ export class RealisticBehaviorEngine {
     // Despair exit (prolonged failure)
     if (psych.consecutiveFailures > 30 && psych.mood < -0.8) return true;
     
-    // Bankruptcy exit
+    // Bankruptcy exit - FORCED, not optional
     if (Number(script.state.walletBalance) < -500 && 
         Number(script.state.loanOutstanding) > 2000) return true;
+    
+    // NEW: Stress collapse - high stress causes random exits
+    if (psych.stress > 0.9) {
+      const collapseChance = (psych.stress - 0.9) * 0.3; // Up to 3% per tick at max stress
+      if (Math.random() < collapseChance) return true;
+    }
+    
+    // NEW: Forced insolvency - can't pay debts for too long
+    const debtToIncomeRatio = Number(script.state.loanOutstanding) / 
+      Math.max(1, Number(script.state.walletBalance));
+    if (debtToIncomeRatio > 10 && psych.consecutiveFailures > 14) {
+      return true; // 2 weeks of failure with 10x debt = forced out
+    }
     
     return false;
   }
   
   private getExitReason(script: SimulatedScript, psych: AgentPsychology, market: MarketState): string {
     if (psych.burnout > 0.95) return 'burnout';
-    if (psych.consecutiveFailures > 30) return 'despair';
+    if (psych.consecutiveFailures > 30 && psych.mood < -0.8) return 'despair';
+    if (psych.stress > 0.9) return 'stress_collapse';
+    const debtRatio = Number(script.state.loanOutstanding) / Math.max(1, Number(script.state.walletBalance));
+    if (debtRatio > 10 && psych.consecutiveFailures > 14) return 'insolvency';
     return 'bankruptcy';
   }
   
