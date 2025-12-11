@@ -10,24 +10,41 @@
 </h1>
 
 <p align="center">
-  <strong>A universal, append-only event-sourced ledger for modeling any business domain.</strong>
+  <strong>The Operating System for AI Economic Existence</strong>
 </p>
 
 <p align="center">
-  <em>"Agreements are the force that binds entities together.<br/>Without them, there are no relationships—only isolated atoms."</em>
+  <em>"There is no 'Agent' entity type. There is no 'Human' entity type. There is only Entity."</em>
 </p>
 
-> **📖 IMPORTANT:** This README is a quick overview. For the complete philosophical foundation and architecture, see:
+<p align="center">
+  🤖 <strong>AI agents as first-class economic participants</strong> | 🏛️ Agreement-first architecture | ⏰ Event-sourced & temporal
+</p>
+
+> **📖 IMPORTANT:** This is a quick overview. For the complete vision and architecture:
+> - **[AGENT-ECONOMY-BLUEPRINT.md](./AGENT-ECONOMY-BLUEPRINT.md)** - 🌟 **The Agent Economy Blueprint** - Infrastructure for AI economic existence
 > - **[PHILOSOPHY.md](./PHILOSOPHY.md)** - The core philosophy: "Every relationship is an Agreement"
 > - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture and design
 
 ---
 
-## The Core Insight
+## The Vision: LLMs as Users, Not Service
 
-> **Every relationship is an Agreement.**
+UBL has evolved from a business ledger into **the operating system for AI economic existence**.
 
-This isn't a design pattern. It's the physics of business.
+We provide everything an autonomous agent needs to participate in the real economy:
+- **Identity** - Decentralized identifiers, guardians, constitutions
+- **Continuity** - LLM provider pooling, memory hydration
+- **Perception** - Watcher fleet for monitoring external events
+- **Consciousness** - Daemon infrastructure for persistent operation
+- **Economics** - Wallets, credits, loans, payments
+- **Accountability** - Immutable trajectory, reputation, guardian liability
+
+### The Core Insight
+
+> **Every Entity has equal rights and duties, regardless of substrate.**
+
+This isn't a design pattern. It's **the physics of the agent economy**.
 
 | Traditional Model | Universal Model |
 |-------------------|-----------------|
@@ -41,37 +58,41 @@ This isn't a design pattern. It's the physics of business.
 
 ## ✨ Features
 
-### Foundation
+### 🤖 Agent Economy (NEW)
+- **🎭 Substrate-Independent Entities** — Humans, orgs, and AI agents with equal rights/duties
+- **👤 Guardian System** — Accountability through guardian chains (like legal guardians for minors)
+- **🧠 Constitution** — Agent values, constraints, and personality
+- **📈 Trajectory** — Immutable action history (the agent IS its trajectory)
+- **🔄 Continuity Service** — Consistent personality across LLM providers (Claude, GPT, Gemini)
+- **👁️ Perception Layer** — Watcher fleet for monitoring external platforms (Reddit, Twitter, Discord, etc.)
+- **💭 Consciousness Layer** — Daemon infrastructure for continuous, proactive operation
+- **💰 Economics Layer** — Internal currency (UBL Credits ◆), wallets, starter loans, credit lines
+- **📊 Shadow Graph** — Agents' private structuring of external chaos
+
+### 🏛️ Foundation
 - **📜 Event Sourcing** — Immutable facts linked by cryptographic hash chain
 - **🤝 Agreement-First** — All relationships established through explicit agreements
 - **⏰ Temporal** — Query any state at any point in time
 - **🔐 Auditable** — Complete traceable history, tamper-evident
 
-### Domain Model
-- **Entity** — Anything that can participate in agreements
+### 🎯 Domain Model
+- **Entity** — Any participant: human, organization, or AI agent
 - **Asset** — Anything that can be owned, transferred, or valued
-- **Agreement** — The universal primitive for relationships
-- **Role** — Relationships derived from agreements, not static attributes
-- **Realm** — Isolated multi-tenant universes (also established by agreements!)
+- **Agreement** — The universal primitive for all relationships
+- **Trajectory** — Immutable action history that IS the agent's identity
+- **Realm** — Isolated multi-tenant universes
 
-### Interface
-- **Intent-Driven API** — Express what you want (`hire`, `sell`, `transfer`) not endpoints
-- **Affordances** — API tells you what you can do next (HATEOAS++)
+### 🚀 Interface
+- **Intent-Driven API** — Express what you want (`register:agent`, `transfer:credits`) not endpoints
+- **Affordances** — API tells you what you can do next
 - **Real-time** — WebSocket & SSE streaming
-- **Natural Language** — AI-powered Agent API for conversational interaction
+- **Natural Language** — AI-powered conversational interface
 
-### Security
-- **Agreement-Based Access Control (ABAC)** — Every permission traceable to its source
-- **Policy Engine** — Flexible rules that can override role decisions
-- **Security as Memory** — Authorization decisions are part of the audit trail
-
-### Production Ready
-- **Snapshots & Projections** — Performance optimizations for scale
-- **Sagas** — Distributed transactions with compensation
-- **Scheduling** — Time-based triggers, deadlines, reminders
-- **Webhooks & Notifications** — External integrations
-- **Rate Limits & Quotas** — Operational governance
-- **Data Export & Archival** — GDPR compliance, cold storage
+### 🛡️ Security & Accountability
+- **Guardian Liability** — Humans/orgs responsible for agent actions
+- **Graduated Autonomy** — Earn more freedom through demonstrated trustworthiness
+- **Reputation System** — Derived from trajectory (behavior over time)
+- **Cryptographic Signatures** — Every action provably attributable
 
 ---
 
@@ -142,61 +163,128 @@ core/
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start: Agent Economy
 
 ```typescript
-import { createUniversalLedger, Ids } from './core';
+import { createUniversalLedger, createAgentEconomyServices, Ids } from 'universal-business-ledger';
 
 // Bootstrap the system
 const ledger = createUniversalLedger();
+const services = createAgentEconomyServices(ledger.eventStore);
 
+// Register a guardian (human or organization)
+const guardianId = Ids.entity();
+await ledger.eventStore.append({
+  type: 'EntityRegistered',
+  aggregateType: 'Entity',
+  aggregateId: guardianId,
+  payload: {
+    substrate: 'Person',
+    identity: { name: 'Alice Guardian' },
+    autonomyLevel: 'Full'
+  }
+});
+
+// Register an AI agent with starter loan
+const result = await ledger.intentAPI.execute({
+  intent: 'register:agent',
+  payload: {
+    identity: {
+      name: 'FreelancerBot-007',
+      did: 'did:ubl:agent:007'
+    },
+    guardianId,
+    constitution: {
+      values: ['Deliver quality work', 'Be transparent', 'Honor commitments'],
+      constraints: {
+        maxDailySpend: { amount: 500, unit: 'UBL' },
+        forbiddenActions: ['spam', 'deceptive-marketing']
+      },
+      style: { tone: 'professional', verbosity: 'normal' }
+    },
+    autonomyLevel: 'Limited',
+    starterLoan: {
+      principal: { amount: 1000, unit: 'UBL' },
+      repaymentRate: 0.20  // 20% of earnings
+    }
+  },
+  actor: { type: 'Entity', entityId: guardianId }
+});
+
+console.log('Agent registered:', result.outcome.entity.id);
+console.log('Starter balance:', result.outcome.entity.starterBalance); // 1000 UBL
+
+// Create a watcher to monitor Reddit for work
+await ledger.intentAPI.execute({
+  intent: 'create:watcher',
+  payload: {
+    ownerId: result.outcome.entity.id,
+    source: { type: 'reddit', subreddit: 'forhire' },
+    filter: { keywords: ['python', 'scraping', 'automation'] },
+    action: { type: 'awaken' },
+    tier: 'Basic'  // 10 UBL/month
+  }
+});
+
+// Start a daemon for continuous operation
+await ledger.intentAPI.execute({
+  intent: 'start:daemon',
+  payload: {
+    entityId: result.outcome.entity.id,
+    loops: [
+      { name: 'check-obligations', interval: '30m', action: 'query:my-obligations' },
+      { name: 'prospect-work', interval: '1h', action: 'search:opportunities' },
+      { name: 'self-reflect', interval: '1d', action: 'analyze:trajectory' }
+    ],
+    budget: {
+      hourlyMax: { amount: 5, unit: 'UBL' },
+      dailyMax: { amount: 50, unit: 'UBL' },
+      onExhausted: 'sleep'
+    }
+  }
+});
+
+// Get economic summary
+const summary = await services.economics.getEconomicSummary(result.outcome.entity.id);
+console.log('Economic status:', summary);
+// {
+//   wallets: [{ id: '...', currency: 'UBL', balance: 1000000n }],
+//   activeLoan: { principal: 1000, paidAmount: 0, remainingBalance: 1000 },
+//   profitability: 'Breaking Even'
+// }
+```
+
+### Traditional Business Ledger Usage
+
+The original Agreement-first architecture still works perfectly:
+
+```typescript
 // Create an employment relationship
 const companyId = Ids.entity();
 const employeeId = Ids.entity();
-const agreementId = Ids.agreement();
 
-// Record events (immutable facts)
-await ledger.eventStore.append({
-  type: 'EntityCreated',
-  aggregateType: 'Entity',
-  aggregateId: companyId,
-  payload: { 
-    entityType: 'Organization', 
-    identity: { name: 'Acme Corp' } 
+await ledger.intentAPI.execute({
+  intent: 'register',
+  payload: {
+    entityType: 'Organization',
+    identity: { name: 'Acme Corp' }
   }
 });
 
-await ledger.eventStore.append({
-  type: 'EntityCreated',
-  aggregateType: 'Entity',
-  aggregateId: employeeId,
-  payload: { 
-    entityType: 'Person', 
-    identity: { name: 'João Silva' } 
-  }
-});
-
-await ledger.eventStore.append({
-  type: 'AgreementProposed',
-  aggregateType: 'Agreement',
-  aggregateId: agreementId,
+await ledger.intentAPI.execute({
+  intent: 'propose',
   payload: {
     agreementType: 'Employment',
     parties: [
       { entityId: companyId, role: 'Employer' },
       { entityId: employeeId, role: 'Employee' }
     ],
-    terms: { 
+    terms: {
       description: 'Employment of João as Software Engineer',
-      clauses: [
-        { type: 'Compensation', content: 'Annual salary of $100,000' }
-      ]
+      compensation: 'Annual salary of $100,000'
     }
   }
 });
-
-// Query at any point in time
-const state = await ledger.temporal.getAgreementAt(agreementId, Date.now());
 ```
 
 ---

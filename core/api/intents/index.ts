@@ -14,6 +14,7 @@
  * - auth-intents.ts      → delegate:auth
  * - workspace-intents.ts → file operations
  * - admin-intents.ts     → realm:create, user:create, apikey:create/revoke/query
+ * - agent-economy-intents.ts → register:agent, create:wallet, transfer:credits, create:watcher, start:daemon
  */
 
 import type { IntentDefinition } from '../intent-api';
@@ -25,6 +26,7 @@ import { DISPUTE_INTENTS } from './dispute-intents';
 import { AUTH_INTENTS } from './auth-intents';
 import { WORKSPACE_INTENTS } from './workspace-intents';
 import { ADMIN_INTENTS } from './admin-intents';
+import { AGENT_ECONOMY_INTENTS } from './agent-economy-intents';
 
 /**
  * All built-in intents aggregated from domain modules.
@@ -38,6 +40,7 @@ export const ALL_INTENTS: readonly IntentDefinition[] = [
   ...AUTH_INTENTS,
   ...WORKSPACE_INTENTS,
   ...ADMIN_INTENTS,
+  ...AGENT_ECONOMY_INTENTS,
 ];
 
 // Re-export individual modules for selective imports
@@ -49,3 +52,4 @@ export { DISPUTE_INTENTS } from './dispute-intents';
 export { AUTH_INTENTS } from './auth-intents';
 export { WORKSPACE_INTENTS } from './workspace-intents';
 export { ADMIN_INTENTS } from './admin-intents';
+export { AGENT_ECONOMY_INTENTS } from './agent-economy-intents';
