@@ -631,6 +631,11 @@
 **Combo Tests**
 - [ ] 🟡 **DEATH_SPIRAL → GOLDEN_AGE → DEATH_SPIRAL** - Histerese test
 
+**Cenários Adicionais (Sugeridos)**
+- [ ] 🟡 **JURISDICTION_SHOPPING** - Scripts migram para realms com menos regras (race to bottom?)
+- [ ] 🟡 **INSIDER_TRADING** - Informação assimétrica, detecção de fraude
+- [ ] 🟡 **OLD_GUARD_VS_NEW_BLOOD** - Reputação legada vs competência atual
+
 ### 7.5 Integração Simulação → Sistema Real
 
 | Componente Simulação | Componente Real | Status |

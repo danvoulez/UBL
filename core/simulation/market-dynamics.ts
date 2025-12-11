@@ -61,9 +61,9 @@ export interface CycleConfig {
 }
 
 const DEFAULT_CYCLE_CONFIG: CycleConfig = {
-  expansionDuration: 365,     // 1 year average expansion (was 2 years)
-  contractionDuration: 90,    // 3 months average contraction (was 6 months)
-  volatility: 0.4,            // More unpredictable (was 0.3)
+  expansionDuration: 270,     // SPRINT 3 FIX: 9 months (was 1 year)
+  contractionDuration: 60,    // SPRINT 3 FIX: 2 months (was 3 months)
+  volatility: 0.5,            // SPRINT 3 FIX: More volatile (was 0.4)
 };
 
 // =============================================================================

@@ -236,6 +236,11 @@ export class RealisticBehaviorEngine {
   private updatePsychology(psych: AgentPsychology, ctx: DecisionContext): void {
     const { script, market, peers } = ctx;
     
+    // SPRINT 3 FIX: Detect positive context
+    const isPositiveContext = market.sentiment > 0.3 && market.cyclePhase === 'Expansion';
+    const isFinanciallySecure = Number(script.state.walletBalance) > 500 && 
+                                 script.state.loanOutstanding === 0n;
+    
     // Mood follows market sentiment with personality filter
     const marketInfluence = market.sentiment * (1 - script.traits.adaptability * 0.5);
     psych.mood += (marketInfluence - psych.mood) * 0.1;
@@ -245,18 +250,46 @@ export class RealisticBehaviorEngine {
       psych.mood += 0.005; // Slow natural recovery
     }
     
+    // SPRINT 3 FIX: Faster mood recovery in positive context
+    if (isPositiveContext && psych.mood < 0.5) {
+      psych.mood += 0.02; // Active mood boost in good times
+    }
+    
     // Stress from financial pressure
     const financialStress = Number(script.state.loanOutstanding) / 
       Math.max(1, Number(script.state.walletBalance) + 100);
-    psych.stress = psych.stress * 0.95 + financialStress * 0.1;
+    
+    // SPRINT 3 FIX: Stress accumulates slower in positive context
+    const stressAccumulationRate = isPositiveContext ? 0.05 : 0.1;
+    psych.stress = psych.stress * 0.95 + financialStress * stressAccumulationRate;
+    
+    // SPRINT 3 FIX: Active stress reduction in positive context
+    if (isPositiveContext && psych.stress > 0.3) {
+      psych.stress -= 0.02; // Recovery in good times
+    }
+    
+    // SPRINT 3 FIX: Financial security reduces anxiety
+    if (isFinanciallySecure) {
+      psych.stress *= 0.97; // "Financial cushion" effect
+    }
     
     // Confidence from reputation
     const reputationConfidence = script.state.reputation / 100;
     psych.confidence += (reputationConfidence - psych.confidence) * 0.05;
     
+    // SPRINT 3 FIX: Confidence boost in prosperity
+    if (isPositiveContext && psych.confidence < 0.8) {
+      psych.confidence += 0.01;
+    }
+    
     // FOMO from seeing successful peers
     const successfulPeers = peers.filter(p => p.balance > Number(script.state.walletBalance) * 1.5);
     psych.fomo = Math.min(1, successfulPeers.length / Math.max(1, peers.length));
+    
+    // SPRINT 3 FIX: In prosperity, FOMO is less toxic (opportunity vs desperation)
+    if (isPositiveContext) {
+      psych.fomo *= 0.7; // Reduced FOMO anxiety in good times
+    }
     
     // Clamp values - STRESS CAPPED AT 1.0
     psych.mood = Math.max(-1, Math.min(1, psych.mood));
@@ -338,18 +371,45 @@ export class RealisticBehaviorEngine {
   }
   
   private shouldPivot(script: SimulatedScript, psych: AgentPsychology, market: MarketState): boolean {
-    // Need adaptability to pivot
-    if (script.traits.adaptability < 0.4) return false;
+    // SPRINT 3 FIX: Relaxed adaptability threshold (0.4 → 0.25)
+    if (script.traits.adaptability < 0.25) return false;
+    
+    // SPRINT 3 FIX: Pivot by opportunity in expansion (regardless of demand level)
+    if (market.cyclePhase === 'Expansion') {
+      // In boom, adaptable scripts seek better opportunities
+      if (psych.fomo > 0.3 && Math.random() < script.traits.adaptability * 0.02) {
+        return true;
+      }
+      // High confidence + good market = try something new
+      if (psych.confidence > 0.6 && Math.random() < 0.01) {
+        return true;
+      }
+    }
     
     // Pivot if current skill is obsolete (low earnings + high skill)
     const currentSkill = this.getSkillLevel(script.id, script.specialization);
-    if (currentSkill > 0.6 && psych.consecutiveFailures > 10) {
-      return Math.random() < script.traits.adaptability * 0.05;
+    if (currentSkill > 0.5 && psych.consecutiveFailures > 7) {
+      return Math.random() < script.traits.adaptability * 0.06;
     }
     
-    // FOMO-driven pivot
-    if (psych.fomo > 0.7 && psych.mood < 0) {
-      return Math.random() < 0.02;
+    // FOMO-driven pivot (more relaxed)
+    if (psych.fomo > 0.4 && psych.mood < 0.3) {
+      return Math.random() < 0.04;
+    }
+    
+    // SPRINT 3 FIX: Pivot by burnout (change field to recover)
+    if (psych.burnout > 0.5 && script.traits.adaptability > 0.35) {
+      return Math.random() < 0.05; // 5% chance per tick when burned out
+    }
+    
+    // SPRINT 3 FIX: Pivot when stuck (consecutive failures)
+    if (psych.consecutiveFailures > 5) {
+      return Math.random() < script.traits.adaptability * 0.03;
+    }
+    
+    // SPRINT 3 FIX: Random exploration pivot (small chance for adaptable scripts)
+    if (script.traits.adaptability > 0.6 && Math.random() < 0.005) {
+      return true; // 0.5% chance for highly adaptable scripts
     }
     
     return false;
