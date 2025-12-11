@@ -223,7 +223,7 @@ export function createInMemoryEventStore(): EventStore {
         if (options?.toTimestamp && event.timestamp > options.toTimestamp) continue;
         if (options?.limit && count >= options.limit) break;
         
-        yield event;
+        yield deepFreeze({ ...event });
         count++;
       }
     },
@@ -235,12 +235,13 @@ export function createInMemoryEventStore(): EventStore {
       for (const event of events) {
         if (event.sequence < from) continue;
         if (to && event.sequence > to) break;
-        yield event;
+        yield deepFreeze({ ...event });
       }
     },
     
     async getById(eventId: EntityId): Promise<Event | null> {
-      return eventById.get(eventId) ?? null;
+      const event = eventById.get(eventId);
+      return event ? deepFreeze({ ...event }) : null;
     },
     
     async getLatest(
@@ -249,7 +250,8 @@ export function createInMemoryEventStore(): EventStore {
     ): Promise<Event | null> {
       const key = makeAggregateKey(aggregateType, aggregateId);
       const aggEvents = eventsByAggregate.get(key);
-      return aggEvents?.[aggEvents.length - 1] ?? null;
+      const event = aggEvents?.[aggEvents.length - 1];
+      return event ? deepFreeze({ ...event }) : null;
     },
     
     async getCurrentSequence(): Promise<SequenceNumber> {
@@ -325,6 +327,19 @@ function generateId(): EntityId {
   const timestamp = Date.now().toString(16);
   const random = Math.random().toString(16).slice(2, 10);
   return `${timestamp}-${random}`;
+}
+
+// Deep freeze to ensure immutability of returned events
+function deepFreeze<T>(obj: T): T {
+  if (obj === null || typeof obj !== 'object') return obj;
+  Object.freeze(obj);
+  for (const key of Object.keys(obj)) {
+    const value = (obj as any)[key];
+    if (value !== null && typeof value === 'object' && !Object.isFrozen(value)) {
+      deepFreeze(value);
+    }
+  }
+  return obj;
 }
 
 // ============================================================================

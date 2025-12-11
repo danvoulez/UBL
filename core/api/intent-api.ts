@@ -344,14 +344,14 @@ export interface IntentContext {
 }
 
 export interface HandlerContext extends IntentContext {
-  readonly eventStore: unknown; // EventStore
-  readonly aggregates: unknown; // AggregateRepository
-  readonly workflows: unknown; // WorkflowEngine
-  readonly agreements: unknown; // AgreementTypeRegistry
-  readonly authorization: unknown; // AuthorizationEngine
-  readonly adapters?: Map<string, unknown>; // Adapter registry
-  readonly runtimeRegistry?: unknown; // RuntimeRegistry
-  readonly containerManager?: unknown; // ContainerManager (replaces realmManager)
+  readonly eventStore: import('../store/event-store').EventStore;
+  readonly aggregates: import('../aggregates/rehydrators').AggregateRepository;
+  readonly workflows: import('../engine/workflow-engine').WorkflowEngine;
+  readonly agreements: import('../universal/agreement-types').AgreementTypeRegistry;
+  readonly authorization: import('../security/authorization').AuthorizationEngine;
+  readonly adapters?: Map<string, unknown>;
+  readonly runtimeRegistry?: unknown;
+  readonly containerManager?: import('../universal/container-manager').ContainerManager;
 }
 
 // ============================================================================
