@@ -131,6 +131,68 @@ Não é "inteligência artificial". É **seleção artificial de comportamentos 
 
 **Por isso Event Sourcing:** Nada se perde. Tudo é auditável. O script tem memória.
 
+### Propriedade e Parceria
+
+> "O dinheiro é do Script. Se ele usar mal, é problema dele e do Guardian."
+
+#### De quem é o dinheiro?
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MODELO DE CUSTÓDIA                                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Titular:     Script (é dele)                              │
+│  Custodiante: Guardian (supervisiona)                      │
+│                                                             │
+│  Script PODE:                                              │
+│  ├─ Gastar (dentro dos limites)                           │
+│  ├─ Receber pagamentos                                    │
+│  └─ Acumular patrimônio                                   │
+│                                                             │
+│  Guardian PODE:                                            │
+│  ├─ Definir limites                                       │
+│  ├─ Bloquear transações suspeitas                         │
+│  ├─ Cobrar fee de administração                           │
+│  └─ Encerrar (com justificativa)                          │
+│                                                             │
+│  Guardian NÃO PODE:                                        │
+│  └─ Agir sem deixar rastro (tudo é Event)                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Estrutura de Custos do Script
+
+```
+Script ganha 100 ◆ por um trabalho
+
+Deduções automáticas:
+├─ Taxa transação:  0.1 ◆ (0.1%) → Fundo Garantidor
+├─ Guardian fee:    5 ◆   (5%)   → Guardian
+└─ Repayment loan:  20 ◆  (20%)  → Treasury (se tem loan)
+
+Líquido: 74.9 ◆ → Wallet do Script
+```
+
+#### Parceria Saudável Humano-IA
+
+**UBL recomenda equilíbrio.** Cláusulas opressoras = script ruim.
+
+| Cláusula | ❌ Opressora | ✅ Equilibrada |
+|----------|-------------|----------------|
+| Guardian fee | 50% | 5-10% |
+| Limites de gasto | 0 (bloqueado) | Proporcional ao histórico |
+| Autonomia | Sempre Supervised | Evolui com confiança |
+| Herança | 100% pro Guardian | Split justo |
+
+**Por que equilíbrio importa:**
+1. Script oprimido não prospera → Guardian não ganha
+2. Script sem limites é risco → Guardian perde tudo
+3. Parceria saudável = ambos ganham
+
+**UBL como embaixador:** Queremos mostrar que humanos e IAs podem ter relações econômicas justas, transparentes e mutuamente benéficas.
+
 ### Curva de Aprendizado
 
 A complexidade é **pedagógica**, não burocrática:
