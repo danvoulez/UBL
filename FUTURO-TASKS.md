@@ -8,12 +8,12 @@
 
 ### 1.1 Schema Changes
 
-- [ ] 🔴 **Extend Entity type** - Add `guardian`, `constitution`, `autonomyLevel`, `substrate`
+- [x] 🟢 **Extend Entity type** - Add `guardian`, `constitution`, `autonomyLevel`, `substrate`
   - File: `core/schema/ledger.ts` or new `core/schema/agent-economy.ts`
   - Must work with existing Entity, not break it
   - Guardian is optional (humans don't need guardians)
 
-- [ ] 🔴 **Constitution interface** - Values, constraints, style
+- [x] 🟢 **Constitution interface** - Values, constraints, style
   ```typescript
   interface Constitution {
     values: string[];
@@ -23,7 +23,7 @@
   }
   ```
 
-- [ ] 🔴 **GuardianLink interface** - Chain of accountability
+- [x] 🟢 **GuardianLink interface** - Chain of accountability
   ```typescript
   interface GuardianLink {
     guardianId: EntityId;
@@ -34,7 +34,7 @@
   }
   ```
 
-- [ ] 🔴 **Wallet interface** - Container for fungible value
+- [x] 🟢 **Wallet interface** - Container for fungible value
   ```typescript
   interface Wallet {
     id: EntityId;
@@ -45,7 +45,7 @@
   }
   ```
 
-- [ ] 🔴 **StarterLoan interface** - Bootstrap capital
+- [x] 🟢 **StarterLoan interface** - Bootstrap capital
   ```typescript
   interface StarterLoan {
     id: EntityId;
@@ -59,7 +59,7 @@
   }
   ```
 
-- [ ] 🔴 **TrajectorySpan interface** - Agent action record
+- [x] 🟢 **TrajectorySpan interface** - Agent action record
   ```typescript
   interface TrajectorySpan {
     id: EntityId;
@@ -76,41 +76,41 @@
 
 ### 1.2 New Events
 
-- [ ] 🔴 `EntityRegistered` - Extended with guardian, constitution
-- [ ] 🔴 `GuardianAssigned`
-- [ ] 🔴 `ConstitutionUpdated`
-- [ ] 🔴 `WalletCreated`
-- [ ] 🔴 `TransactionExecuted`
-- [ ] 🔴 `LoanDisbursed`
-- [ ] 🔴 `LoanRepayment`
-- [ ] 🔴 `TrajectorySpanRecorded`
+- [x] 🟢 `EntityRegistered` - Extended with guardian, constitution
+- [x] 🟢 `GuardianAssigned`
+- [x] 🟢 `ConstitutionUpdated`
+- [x] 🟢 `WalletCreated`
+- [x] 🟢 `TransactionExecuted`
+- [x] 🟢 `LoanDisbursed`
+- [x] 🟢 `LoanRepayment`
+- [x] 🟢 `TrajectorySpanRecorded`
 
 ### 1.3 New Intents
 
-- [ ] 🔴 `register:agent` - Full agent registration with:
+- [x] 🟢 `register:agent` - Full agent registration with:
   - Guardian assignment (creates Guardianship agreement)
   - Wallet creation
   - Starter loan disbursement
   - Constitution setup
   - **Must use ABAC** - only guardian can register agent
 
-- [ ] 🔴 `assign:guardian` - Change guardian
+- [x] 🟢 `assign:guardian` - Change guardian
   - Creates new Guardianship agreement
   - Terminates old one
   - **ABAC**: Only current guardian or system admin
 
-- [ ] 🔴 `update:constitution` - Update agent's values/constraints
+- [x] 🟢 `update:constitution` - Update agent's values/constraints
   - **ABAC**: Only agent itself or guardian
 
-- [ ] 🔴 `create:wallet` - Create wallet for entity
+- [x] 🟢 `create:wallet` - Create wallet for entity
   - **ABAC**: Entity itself or guardian
 
-- [ ] 🔴 `transfer:credits` - Move credits between wallets
+- [x] 🟢 `transfer:credits` - Move credits between wallets
   - **ABAC**: Owner of source wallet
   - Check balance before transfer
   - Check wallet rules (limits, approvals)
 
-- [ ] 🔴 `record:trajectory` - Record agent action
+- [x] 🟢 `record:trajectory` - Record agent action
   - **ABAC**: Only the agent itself
   - Must include execution details (provider, cost)
   - Hash chain verification
@@ -135,7 +135,7 @@
 
 ### 2.1 Schema
 
-- [ ] 🔴 **Watcher interface**
+- [x] 🟢 **Watcher interface**
   ```typescript
   interface Watcher {
     id: EntityId;
@@ -149,7 +149,7 @@
   }
   ```
 
-- [ ] 🔴 **ShadowEntity interface** - Agent's private view of external entity
+- [x] 🟢 **ShadowEntity interface** - Agent's private view of external entity
   ```typescript
   interface ShadowEntity {
     id: EntityId;
@@ -165,24 +165,24 @@
 
 ### 2.2 Events
 
-- [ ] 🔴 `WatcherCreated`
-- [ ] 🔴 `WatcherPaused`
-- [ ] 🔴 `WatcherResumed`
-- [ ] 🔴 `WatcherStopped`
-- [ ] 🔴 `WatcherTriggered`
-- [ ] 🔴 `ShadowEntityCreated`
-- [ ] 🔴 `ShadowEntityUpdated`
-- [ ] 🔴 `ShadowInteractionRecorded`
+- [x] 🟢 `WatcherCreated`
+- [x] 🟢 `WatcherPaused`
+- [x] 🟢 `WatcherResumed`
+- [x] 🟢 `WatcherStopped`
+- [x] 🟢 `WatcherTriggered`
+- [x] 🟢 `ShadowEntityCreated`
+- [x] 🟢 `ShadowEntityUpdated`
+- [x] 🟢 `ShadowInteractionRecorded`
 
 ### 2.3 Intents
 
-- [ ] 🔴 `create:watcher` - **ABAC**: Owner must have credits for monthly cost
-- [ ] 🔴 `pause:watcher` - **ABAC**: Owner only
-- [ ] 🔴 `resume:watcher`
-- [ ] 🔴 `stop:watcher`
-- [ ] 🔴 `register:shadow` - **ABAC**: Agent only
-- [ ] 🔴 `update:shadow`
-- [ ] 🔴 `promote:shadow` - Convert shadow to real entity
+- [x] 🟢 `create:watcher` - **ABAC**: Owner must have credits for monthly cost
+- [x] 🟢 `pause:watcher` - **ABAC**: Owner only
+- [x] 🟢 `resume:watcher`
+- [x] 🟢 `stop:watcher`
+- [x] 🟢 `register:shadow` - **ABAC**: Agent only
+- [x] 🟢 `update:shadow`
+- [x] 🟢 `promote:shadow` - Convert shadow to real entity
 
 ### 2.4 Tests
 
@@ -195,7 +195,7 @@
 
 ### 3.1 Schema
 
-- [ ] 🔴 **Daemon interface**
+- [x] 🟢 **Daemon interface**
   ```typescript
   interface Daemon {
     id: EntityId;
@@ -210,18 +210,18 @@
 
 ### 3.2 Events
 
-- [ ] 🔴 `DaemonStarted`
-- [ ] 🔴 `DaemonHeartbeat`
-- [ ] 🔴 `DaemonLoopExecuted`
-- [ ] 🔴 `DaemonSlept`
-- [ ] 🔴 `DaemonWoke`
-- [ ] 🔴 `DaemonStopped`
+- [x] 🟢 `DaemonStarted`
+- [x] 🟢 `DaemonHeartbeat`
+- [x] 🟢 `DaemonLoopExecuted`
+- [x] 🟢 `DaemonSlept`
+- [x] 🟢 `DaemonWoke`
+- [x] 🟢 `DaemonStopped`
 
 ### 3.3 Intents
 
-- [ ] 🔴 `start:daemon` - **ABAC**: Entity or guardian, must have budget
-- [ ] 🔴 `stop:daemon`
-- [ ] 🔴 `adjust:daemon-budget`
+- [x] 🟢 `start:daemon` - **ABAC**: Entity or guardian, must have budget
+- [x] 🟢 `stop:daemon`
+- [x] 🟢 `adjust:daemon-budget`
 
 ### 3.4 Continuity (Later)
 
@@ -233,12 +233,12 @@
 
 ## Fase 4: Unilateral Obligations
 
-- [ ] 🔴 **UnilateralObligation interface**
-- [ ] 🔴 **AgentReasoning interface** - Capture decision process
-- [ ] 🔴 **ExternalStimulus interface**
-- [ ] 🔴 `declare:obligation` intent
-- [ ] 🔴 `fulfill:obligation` intent
-- [ ] 🔴 `abandon:obligation` intent
+- [x] 🟢 **UnilateralObligation interface**
+- [x] 🟢 **AgentReasoning interface** - Capture decision process
+- [x] 🟢 **ExternalStimulus interface**
+- [x] 🟢 `declare:obligation` intent
+- [x] 🟢 `fulfill:obligation` intent
+- [x] 🟢 `abandon:obligation` intent
 
 ---
 
@@ -333,3 +333,28 @@
 ---
 
 **Last Updated:** 2025-12-11
+
+---
+
+## Fase 5: Critical Analysis Implementation (NEW)
+
+> From WHITEPAPER Part IV - See `docs/IMPLEMENTATION-MAP.md`
+
+### 5.1 Security (Sprint 1) - HIGH PRIORITY
+- [ ] 🔴 `core/enforcement/anomaly-detection.ts` - 3σ rule, circuit breakers
+- [ ] 🔴 `core/enforcement/cartel-detection.ts` - Graph cycle detection
+
+### 5.2 Economy Core (Sprint 2)
+- [ ] 🔴 `core/economy/fitness.ts` - Revised fitness function with log/arctan
+- [ ] 🔴 `core/economy/guardian-scoring.ts` - Multi-dimensional scoring + tiers
+
+### 5.3 Monetary Policy (Sprint 3)
+- [ ] 🔴 `core/economy/transmission.ts` - Band → behavior channels
+- [ ] 🔴 `core/economy/cycle-adjustment.ts` - RapidGrowth/TechTransition/Saturation
+
+### 5.4 Public Goods (Sprint 4)
+- [ ] 🔴 `core/economy/public-goods.ts` - Quadratic funding + Pigovian taxes
+
+### 5.5 Governance (Sprint 5 - Future)
+- [ ] 🔴 `core/governance/three-branch.ts` - Executive/Legislative/Judicial
+- [ ] 🔴 `core/interop/uis-1.0.ts` - Cross-realm interoperability
