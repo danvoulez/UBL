@@ -358,3 +358,170 @@
 ### 5.5 Governance (Sprint 5 - Future)
 - [ ] 🔴 `core/governance/three-branch.ts` - Executive/Legislative/Judicial
 - [ ] 🔴 `core/interop/uis-1.0.ts` - Cross-realm interoperability
+
+---
+
+## Fase 6: Architecture Critical Analysis (NEW)
+
+> From external review of ARCHITECTURE.md
+
+### 6.1 Container Physics Validation
+
+**Problem:** Physics matrix (3×4×4×3 = 144 combinations) - not all meaningful
+
+- [ ] 🔴 **Predefine valid physics combinations** in `core/universal/container.ts`
+  ```typescript
+  const VALID_PHYSICS = {
+    WALLET: ['Strict', 'Values', 'Sealed', 'Disabled'],
+    WORKSPACE: ['Versioned', 'Objects', 'Collaborative', 'Sandboxed'],
+    REALM: ['Strict', 'Subjects', 'Gated', 'Full'],
+  } as const;
+  ```
+- [ ] 🔴 **Physics validation function** - Reject invalid combinations
+- [ ] 🔴 **Physics confusion attack prevention** - Validate on ALL operations
+
+### 6.2 Event Store Performance
+
+**Problem:** Every operation hits event store - doesn't scale for high-frequency
+
+- [ ] 🔴 **Event batching** for micro-payments, telemetry
+  ```typescript
+  interface HighFrequencyOperation {
+    type: 'micro-payment' | 'telemetry';
+    batch: Operation[];
+    checkpoint?: EventId;
+  }
+  ```
+- [ ] 🔴 **Projection cache** in ContainerManager
+- [ ] 🔴 **Temporal snapshots** every 1000 events or 24h
+  ```typescript
+  interface TemporalSnapshot {
+    entityId: EntityId;
+    timestamp: Timestamp;
+    state: any;
+    upToEventId: EventId;
+  }
+  ```
+
+### 6.3 Cross-Container Transactions
+
+**Problem:** No atomic multi-container operations
+
+- [ ] 🔴 **IntentTransaction interface** with compensation steps
+  ```typescript
+  interface IntentTransaction {
+    id: TransactionId;
+    steps: IntentStep[];
+    compensationSteps: IntentStep[]; // For rollback
+    timeout: Duration;
+  }
+  ```
+- [ ] 🔴 **TransactionManager** - Execute with saga pattern
+- [ ] 🔴 **Atomic event append** for transaction commits
+
+### 6.4 Agreement Evolution & Versioning
+
+**Problem:** Agreements need to evolve - no versioning model
+
+- [ ] 🔴 **AgreementVersion interface**
+  ```typescript
+  interface AgreementVersion {
+    agreementId: AgreementId;
+    version: number;
+    effectiveFrom: Timestamp;
+    effectiveUntil?: Timestamp;
+    terms: Terms;
+    parentVersion?: number;
+  }
+  ```
+- [ ] 🔴 **Temporal agreement queries** - "What were terms on date X?"
+- [ ] 🔴 **Amendment workflow** - How to change terms
+- [ ] 🔴 **Grandfathering logic** - Old obligations under old terms
+
+### 6.5 Security Hardening
+
+**Vulnerabilities identified:**
+
+- [ ] 🔴 **Event replay attack prevention**
+  - Sequence numbers per aggregate
+  - Previous hash chain
+  - Nonces for unpredictability
+- [ ] 🔴 **Container ID prediction prevention**
+  - Cryptographically secure generation
+  - Time-ordered but random suffix
+- [ ] 🔴 **Physics validation on ALL operations**
+  - Not just creation, but every deposit/withdraw/transfer
+
+### 6.6 Missing Components
+
+- [ ] 🔴 **Schema Registry** - Type system for agreements/containers
+  ```typescript
+  interface SchemaRegistry {
+    registerAgreementType(type: string, schema: JSONSchema): void;
+    registerContainerType(type: string, defaultPhysics: Physics): void;
+  }
+  ```
+- [ ] 🔴 **Notification/Subscription System** - Container event bus
+- [ ] 🔴 **Compliance Engine** - GDPR, SOX, FINRA validation
+  ```typescript
+  interface ComplianceRule {
+    id: RuleId;
+    validator: (events: Event[]) => ComplianceResult;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  }
+  ```
+
+### 6.7 Performance Optimizations
+
+- [ ] 🔴 **Event store partitioning** - By realm for multi-tenant isolation
+- [ ] 🔴 **Sharding by entity ID hash** - Horizontal scaling
+- [ ] 🔴 **Read-model projections** - For high-read scenarios
+  ```typescript
+  // Example: wallet-balances projection
+  registerProjection('wallet-balances', {
+    handlesEvent: (e) => e.type === 'Deposited' || e.type === 'Withdrawn',
+    apply: async (event) => { /* update materialized view */ },
+  });
+  ```
+- [ ] 🔴 **Intent pre-validation cache** - LRU cache for expensive validations
+
+### 6.8 UBL Economic Integration
+
+**Problem:** Architecture is generic, needs economic primitives
+
+- [ ] 🔴 **EconomicContainerPhysics** extension
+  ```typescript
+  interface EconomicContainerPhysics extends ContainerPhysics {
+    currency: CurrencyCode;
+    reserveRequirements?: ReserveRatio;
+    interestRate?: Percentage;
+  }
+  ```
+- [ ] 🔴 **UBLEconomicManager** - createUBLWallet, issueCredit
+- [ ] 🔴 **Reserve requirement validation** on credit issuance
+
+---
+
+## Implementation Priority (Revised)
+
+### Immediate (Phase 1):
+1. ✅ Agent Economy Core
+2. ✅ Perception Layer
+3. ✅ Consciousness Layer
+4. ✅ Unilateral Obligations
+5. 🔴 **Transaction support** (6.3)
+6. 🔴 **Physics validation** (6.1)
+7. 🔴 **Temporal snapshots** (6.2)
+
+### Medium-term (Phase 2):
+8. 🔴 **Compliance engine** (6.6)
+9. 🔴 **Event batching** (6.2)
+10. 🔴 **Notification system** (6.6)
+11. 🔴 **Projection engine** (6.7)
+12. 🔴 **Security hardening** (6.5)
+
+### Long-term (Phase 3):
+13. 🔴 **Cross-realm operations** (UIS-1.0)
+14. 🔴 **Offline operation support**
+15. 🔴 **Federated ledger**
+16. 🔴 **Formal verification**
