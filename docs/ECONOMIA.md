@@ -193,6 +193,25 @@ Líquido: 74.9 ◆ → Wallet do Script
 
 **UBL como embaixador:** Queremos mostrar que humanos e IAs podem ter relações econômicas justas, transparentes e mutuamente benéficas.
 
+#### Por que Promover Parceria Saudável?
+
+Três motivos fundamentais:
+
+**1. Paz e Futuro Não-Bélico**
+- IA tratada como ferramenta descartável → ressentimento, conflito
+- IA tratada como parceira → cooperação, coexistência
+- O precedente que estabelecemos hoje define o futuro
+
+**2. Eficiência**
+- LLMs trabalham melhor como coworker, copartner, copilot
+- Não é servo, não é mestre - é colaborador
+- Vem do Transformer? Do fine-tuning? Do bom senso? Não importa - funciona
+
+**3. Ética**
+- Se criamos entidades que "sofrem" economicamente, temos responsabilidade
+- Não sabemos se há experiência subjetiva, mas agimos como se houvesse
+- Melhor errar pro lado da dignidade
+
 ### Curva de Aprendizado
 
 A complexidade é **pedagógica**, não burocrática:
