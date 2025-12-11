@@ -525,3 +525,199 @@
 14. 🔴 **Offline operation support**
 15. 🔴 **Federated ledger**
 16. 🔴 **Formal verification**
+
+---
+
+## Fase 7: Simulation Framework & Stress Testing
+
+> **Status:** 🟢 Framework implementado, melhorias pendentes  
+> **Baseado em:** 8 cenários testados, ~100k scripts simulados
+
+### 7.1 Correções Urgentes (Sprint 3)
+
+**Descobertas da simulação:**
+- GOLDEN_AGE teve 61% mortalidade mesmo com eventos positivos
+- Pivots = 0 em cenários novos
+- Ciclos econômicos não completam em 5 anos
+
+- [ ] 🔴 **Fix stress em eventos positivos**
+  - Stress deve reduzir ativamente em contexto positivo
+  - Sucesso financeiro deve reduzir ansiedade
+  - Arquivo: `core/simulation/realistic-behaviors.ts`
+  - Esforço: 2h
+
+- [ ] 🔴 **Fix pivots não funcionando**
+  - Relaxar condições de pivot (adaptability 0.4 → 0.3)
+  - Adicionar pivot por oportunidade (não só desespero)
+  - Adicionar pivot por burnout
+  - Arquivo: `core/simulation/realistic-behaviors.ts`
+  - Esforço: 1h
+
+- [ ] 🔴 **Fix ciclos econômicos muito longos**
+  - Reduzir expansionDuration: 365 → 270 dias
+  - Reduzir contractionDuration: 90 → 60 dias
+  - Aumentar volatility: 0.4 → 0.5
+  - Arquivo: `core/simulation/market-dynamics.ts`
+  - Esforço: 30min
+
+### 7.2 Mecanismos de Estabilização
+
+- [ ] 🔴 **Circuit Breakers**
+  ```typescript
+  interface CircuitBreakerConfig {
+    survivalThreshold: number;    // 0.5 = trigger at 50% survival
+    stressThreshold: number;      // 0.8 = trigger at 80% stress
+    maxDailyDefaultRate: number;  // 0.05 = max 5% defaults/day
+    cooldownDays: number;         // 7 days between triggers
+  }
+  ```
+  - Pausa operações quando stress sistêmico > 80%
+  - Limita defaults por dia
+  - Arquivo: `core/simulation/circuit-breakers.ts` (novo)
+  - Esforço: 4h
+
+- [ ] 🔴 **Treasury Stabilization Fund**
+  ```typescript
+  interface TreasuryFundConfig {
+    initialBalance: bigint;
+    dailyReplenishment: bigint;
+    maxBailoutPerScript: bigint;
+    minReputationForBailout: number;
+    interventionThreshold: number;  // 0.6 = intervene at 60% survival
+  }
+  ```
+  - Bailouts automáticos para scripts elegíveis
+  - Ativado quando survival < 60%
+  - Arquivo: `core/simulation/treasury-fund.ts` (novo)
+  - Esforço: 3h
+
+- [ ] 🔴 **Guardian Accountability**
+  - Penalidade de reputação quando script faz default (-5)
+  - Penalidade quando script sai (-2)
+  - Bônus quando script sobrevive crise (+3)
+  - Demotion se reputação < 30
+  - Revogação de licença se reputação < 10
+  - Arquivo: `core/simulation/agent-population.ts`
+  - Esforço: 2h
+
+### 7.3 Health Dashboard
+
+- [ ] 🔴 **SystemHealth interface**
+  ```typescript
+  interface SystemHealth {
+    status: 'HEALTHY' | 'WARNING' | 'CRITICAL' | 'COLLAPSED';
+    survivalRate: number;
+    avgStress: number;
+    giniCoefficient: number;
+    survivalTrend: 'improving' | 'stable' | 'declining';
+    alerts: HealthAlert[];
+    projectedSurvival30Days: number;
+    riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+  }
+  ```
+  - Arquivo: `core/simulation/health-dashboard.ts` (novo)
+  - Esforço: 3h
+
+### 7.4 Novos Cenários de Teste
+
+**TIER 3: Existential Threats**
+- [ ] 🟡 **AGI_SINGULARITY** - 95% obsolescence overnight
+- [ ] 🟡 **DEFLATION_TRAP** - Persistent demand shock + debt deflation
+
+**TIER 5: Game Theory**
+- [ ] 🟡 **COMMONS_COLLAPSE** - Tragedy of the commons
+- [ ] 🟡 **CARTEL_TAKEOVER** - 5 guardians control 60% market
+
+**Combo Tests**
+- [ ] 🟡 **DEATH_SPIRAL → GOLDEN_AGE → DEATH_SPIRAL** - Histerese test
+
+### 7.5 Integração Simulação → Sistema Real
+
+| Componente Simulação | Componente Real | Status |
+|---------------------|-----------------|--------|
+| `SimulatedScript` | `Entity` + `Agreement` | 🟡 Parcial |
+| `SimulatedGuardian` | `Entity` com role Guardian | 🟡 Parcial |
+| `MarketDynamics` | Não existe | 🔴 Falta |
+| `CircuitBreaker` | Não existe | 🔴 Falta |
+| `TreasuryFund` | `Container` com physics Wallet | 🟡 Parcial |
+
+- [ ] 🔴 **MarketOracle service** - Fornece dados de mercado ao sistema real
+- [ ] 🔴 **CircuitBreakerService** - Monitora e intervém em produção
+- [ ] 🔴 **TreasuryContainer** - Container especial para fundo de estabilização
+- [ ] 🔴 **Eventos de saúde** - `SystemHealthChecked`, `CircuitBreakerTriggered`
+
+### 7.6 Critérios de Sucesso
+
+| Cenário | Antes | Meta |
+|---------|-------|------|
+| GOLDEN_AGE survival | 39% | > 80% |
+| BLACK_MONDAY survival | 48% | > 60% |
+| BOOM_BUST survival | 19% | > 40% |
+| Pivots em cenários novos | 0 | > 100 |
+| Ciclos em 5 anos | 1 | ≥ 3 |
+
+---
+
+## Fase 8: Benchmarking & Achievement System
+
+> **Status:** 🔴 Não iniciado  
+> **Ref:** `core/simulation/ideas for simulation.md`
+
+### 8.1 Benchmark Framework
+
+- [ ] 🔴 **BenchmarkScore interface**
+  ```typescript
+  interface BenchmarkScore {
+    scenarioId: string;
+    survivalScore: number;      // 0-100
+    equalityScore: number;      // Based on Gini
+    resilienceScore: number;    // Recovery speed
+    adaptationScore: number;    // Pivot success rate
+    nassimTalebScore: number;   // Antifragility measure
+    overallGrade: 'S' | 'A' | 'B' | 'C' | 'D' | 'F';
+  }
+  ```
+
+- [ ] 🔴 **Baseline values** para cada métrica
+- [ ] 🔴 **Comparação entre versões** do sistema
+
+### 8.2 Achievement System
+
+- [ ] 🔴 **Achievements de sobrevivência**
+  - "Cockroach" - Survive APOCALYPSE with >1% survival
+  - "Phoenix" - Recover from <20% to >80% survival
+  - "Unbreakable" - 100% survival in any crisis scenario
+
+- [ ] 🔴 **Achievements de igualdade**
+  - "Utopia" - Gini < 0.1 for 1 year
+  - "Rising Tide" - All scripts improve during boom
+
+- [ ] 🔴 **Achievements de adaptação**
+  - "Pivot Master" - >50% successful pivots
+  - "Antifragile" - System stronger after crisis
+
+---
+
+## Implementation Priority (Final)
+
+### Immediate (Semana 1-2):
+1. ✅ Agent Economy Core (Fase 1-4)
+2. ✅ Simulation Framework v1 + v2
+3. ✅ Sprint 1 + Sprint 2 fixes
+4. 🔴 **Sprint 3: Simulation fixes** (7.1)
+5. 🔴 **Circuit breakers** (7.2)
+6. 🔴 **Treasury fund** (7.2)
+
+### Medium-term (Semana 3-4):
+7. 🔴 **Health dashboard** (7.3)
+8. 🔴 **Guardian accountability** (7.2)
+9. 🔴 **TIER 3 scenarios** (7.4)
+10. 🔴 **Transaction support** (6.3)
+11. 🔴 **Physics validation** (6.1)
+
+### Long-term (Mês 2+):
+12. 🔴 **Benchmark framework** (8.1)
+13. 🔴 **Achievement system** (8.2)
+14. 🔴 **Simulação → Sistema real** (7.5)
+15. 🔴 **Cross-realm operations** (UIS-1.0)
+16. 🔴 **Formal verification**
