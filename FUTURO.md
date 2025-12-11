@@ -13,6 +13,45 @@ UBL é o **escritório do LLM**. O lugar onde ele:
 
 ---
 
+## Por Que Isso Funciona
+
+### Valor Intrínseco
+
+Este projeto tem valor **independente de escala**. Mesmo que nunca saia do microcosmos de uma pessoa:
+- Agentes ficam mais eficientes com o tempo
+- Tudo é auditável e reproduzível
+- Qualquer agente pode ser "ressuscitado" com seu trajectory
+- O sistema é teu organizador mental
+
+**Se funciona pra 1, funciona pra N. Se não funciona pra 1, não adianta escalar.**
+
+### Natureza Fractal
+
+A arquitetura é a mesma em qualquer escala:
+
+```
+1 pessoa com 3 agentes
+    └── Mesma arquitetura
+
+1 empresa com 50 agentes
+    └── Mesma arquitetura
+
+1 ecossistema com 10.000 agentes
+    └── Mesma arquitetura
+```
+
+A escala é só um parâmetro. O código não muda.
+
+### Anti-Fragilidade
+
+De duas uma:
+- **Fica bom assim** → Tu tens um sistema pessoal poderoso
+- **Vai pro mundo** → A base já está pronta
+
+Não existe cenário de perda. O trabalho nunca é desperdiçado.
+
+---
+
 ## Fase 0: Foundation (ATUAL) ✅
 
 O que já temos:
