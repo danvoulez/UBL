@@ -254,7 +254,7 @@
 
 ## Ideas from Alien Code (to extract)
 
-### Good Ideas ✅
+### From code-to-check-and-maybe-copy ✅
 1. **Constitution** - Agent personality/constraints as first-class concept
 2. **GuardianLink** - Explicit accountability chain
 3. **TrajectorySpan** - Detailed action recording with provider info
@@ -264,12 +264,32 @@
 7. **Provider strategy** - Consistency across LLM providers
 8. **Memory hydration** - Context injection for continuity
 
+### From Atomic Agents (outro-codigo) ✅
+1. **TDLN Compression** - NL→Structured format, 90% token savings
+   - Podemos usar para comprimir intents antes de enviar ao LLM
+2. **LogLine Format** - Structured text format (Rust parser exists)
+   - Alternativa legível a JSON para logs/trajectory
+3. **Risk Assessment** - Score de risco por operação
+   - Adicionar ao ABAC: low/medium/high/critical risk levels
+   - Operações high+ requerem guardian approval
+4. **Policy Gates** - Governance estrutural
+   - Já temos ABAC, mas podemos adicionar constraints estruturais
+5. **Mechanic vs Genius modes** - Budget modes
+   - Mechanic: cheap, strict rules, limited tools
+   - Genius: expensive, exploratory, more freedom
+   - Aplicar aos Daemons
+6. **Append-only Ledger com triggers** - PostgreSQL triggers que bloqueiam UPDATE/DELETE
+   - Quando formos para persistência real, usar isso
+7. **Cross-project Knowledge** - Memória compartilhada
+   - Trajectory spans podem ser buscados semanticamente
+
 ### Bad Patterns ❌ (Don't copy)
-1. `eventStore.query()` - Method doesn't exist
+1. `eventStore.query()` - Method doesn't exist in our EventStore
 2. Services doing `append()` directly - Bypass intents
 3. Hardcoded `actor: { type: 'System' }` - No real actor
 4. No ABAC checks in services
 5. Ignoring containerManager
+6. PostgreSQL as primary storage - We're event-store first
 
 ---
 
