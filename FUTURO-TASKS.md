@@ -283,6 +283,33 @@
 7. **Cross-project Knowledge** - Memória compartilhada
    - Trajectory spans podem ser buscados semanticamente
 
+### From LogLine LLM World ✅
+1. **Golden Run (Canon)** - Exemplo mínimo que define o contrato do sistema
+   - "Any new feature that breaks this story is wrong"
+   - Criar um Golden Run para UBL (register agent → create wallet → transfer)
+2. **Execution Budgets per Run** - Limites por execução
+   - `cost_limit_cents` - teto de custo
+   - `llm_calls_limit` - máximo de chamadas LLM
+   - `latency_slo_ms` - SLO de latência
+   - Aplicar aos Daemons e Watchers
+3. **Risk Levels em Tools/Intents** - low/medium/high por operação
+   - Intents high+ requerem guardian approval
+   - Adicionar `riskLevel` ao IntentDefinition
+4. **Policy require_approval** - Pausar execução até aprovação humana
+   - Adicionar ao ABAC: além de allow/deny, ter require_approval
+   - Run entra em status "paused" com human_gate
+5. **Memory Engine (pgvector)** - RAG com embeddings
+   - Semantic search em trajectories
+   - Futuro: "find similar past work"
+6. **JSON✯Atomic** - Formato estruturado self-describing
+   - Hash chain para integridade
+   - Melhor compreensão por LLMs
+7. **Audit Logs separado** - Tabela dedicada para audit trail
+   - Quando formos para PostgreSQL, separar events de audit_logs
+8. **Alert Configs** - Regras de alerta configuráveis
+   - error_rate, budget_exceeded, policy_denials
+   - Notification channels: webhook, email, slack
+
 ### Bad Patterns ❌ (Don't copy)
 1. `eventStore.query()` - Method doesn't exist in our EventStore
 2. Services doing `append()` directly - Bypass intents
