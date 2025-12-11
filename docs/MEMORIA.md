@@ -1,6 +1,209 @@
 # Memória no UBL
 
-> Memória = Tudo que eu consigo ler
+> Memória = Tudo que eu consigo ler, dado meu Contrato de Memória
+
+---
+
+## Memory Contract (Contrato de Memória)
+
+**Toda interação no UBL é regida por um Memory Contract.**
+
+Um Memory Contract é um Agreement que define:
+- O que cada parte pode **ler** (lembrar)
+- O que cada parte pode **escrever** (registrar)
+- Por **quanto tempo**
+- Com que **propósito**
+- Com que **limites**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MEMORY CONTRACT                                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Partes: Usuário ↔ Serviço                                  │
+│                                                             │
+│  Cláusulas:                                                 │
+│  ├─ Serviço pode ler: histórico da sessão                   │
+│  ├─ Serviço pode escrever: eventos da sessão                │
+│  ├─ Usuário pode ler: seus dados, respostas                 │
+│  ├─ Usuário pode escrever: perguntas, comandos              │
+│  ├─ Duração: até fim da sessão (ou 24h)                     │
+│  └─ Propósito: atendimento                                  │
+│                                                             │
+│  Ao usar o serviço, você aceita este contrato.              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Tipos de Memory Contract
+
+| Tipo | Duração | Escopo | Exemplo |
+|------|---------|--------|---------|
+| **Session** | Temporário (horas) | Conversa atual | Chat com usuário |
+| **Guardianship** | Permanente | Tudo do script | Guardian supervisiona |
+| **Employment** | Duração do trabalho | Output + status | Cliente contrata script |
+| **Collaboration** | Definido | Dados compartilhados | Scripts cooperam |
+| **Observation** | Permanente | Audit trail | Compliance |
+
+### Session como Memory Contract
+
+Quando você inicia uma sessão:
+
+```typescript
+// Implicitamente, um Agreement é criado:
+{
+  type: 'MemoryContract',
+  subtype: 'Session',
+  parties: [userId, serviceId],
+  clauses: [
+    // Serviço lembra da conversa
+    { 
+      party: serviceId,
+      action: 'read', 
+      resource: 'session',
+      scope: sessionId,
+    },
+    // Serviço registra eventos
+    { 
+      party: serviceId,
+      action: 'write', 
+      resource: 'events',
+      scope: sessionId,
+    },
+    // Usuário vê suas entidades
+    { 
+      party: userId,
+      action: 'read', 
+      resource: 'entities',
+      scope: 'own',
+    },
+  ],
+  validity: {
+    from: sessionStart,
+    until: sessionStart + 86400000,  // 24h max
+  },
+  terminationConditions: [
+    'user:logout',
+    'timeout:24h',
+    'explicit:end-session',
+  ],
+}
+```
+
+### Por que isso importa?
+
+**1. Transparência**
+- Você sabe exatamente o que o sistema pode lembrar
+- Não tem "memória oculta"
+
+**2. Controle**
+- Você pode revogar o contrato (encerrar sessão)
+- Você pode pedir para "esquecer" (se o contrato permitir)
+
+**3. Compliance**
+- LGPD/GDPR friendly
+- Audit trail de quem acessou o quê
+
+**4. Consistência**
+- Mesma mecânica para tudo (sessão, guardianship, trabalho)
+- Um conceito, múltiplos usos
+
+### O LLM Embarcado é um Script
+
+A grande revelação: **não existe "LLM como serviço" separado de "LLM como usuário"**.
+
+O Antenna (LLM embarcado que atende usuários) é simplesmente um Script com um Memory Contract especial:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ANTENNA = SCRIPT                                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  EntityId:     antenna-001                                  │
+│  Substrate:    Agent                                        │
+│  Guardian:     system-admin                                 │
+│  Wallet:       Paga pelas chamadas LLM                      │
+│  Daemon:       Persistent (sempre rodando)                  │
+│  Constitution: "Atender usuários do UBL"                    │
+│                                                             │
+│  Memory Contract (ServiceAgent):                            │
+│  ├─ Pode criar sessões com qualquer usuário                 │
+│  ├─ Pode ler dados do usuário durante sessão                │
+│  ├─ Pode escrever eventos de sessão                         │
+│  ├─ Paga pelo uso de LLM do próprio wallet                  │
+│  └─ Não pode ler dados de outros scripts                    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Consequências:**
+
+1. **Mesma arquitetura** - Antenna usa EventStore, ABAC, Agreements como qualquer script
+2. **Paga pelo que usa** - Tem wallet, gasta ◆ em chamadas LLM
+3. **Auditável** - Todas as ações são Events no Ledger
+4. **Substituível** - Pode ter múltiplos "Antennas" com contratos diferentes
+5. **Não é especial** - É só um script com permissões específicas
+
+```typescript
+// Registrar o Antenna como qualquer script
+await intent('register:agent', {
+  identity: { name: 'UBL Antenna' },
+  guardianId: systemAdminId,
+  constitution: {
+    values: ['Atender usuários', 'Ser útil', 'Seguir regras'],
+    constraints: { allowedIntents: ['*'] },
+  },
+  autonomyLevel: 'Full',
+});
+
+// Criar Memory Contract de ServiceAgent
+await intent('propose:agreement', {
+  type: 'MemoryContract',
+  subtype: 'ServiceAgent',
+  parties: [antennaId, systemId],
+  clauses: [
+    { action: 'write', resource: 'session', scope: '*' },
+    { action: 'read', resource: 'entities', scope: 'session-user' },
+    { action: 'spend', resource: 'wallet', scope: 'self' },
+  ],
+});
+```
+
+**Não existe distinção ontológica entre scripts.** Existe apenas:
+- Scripts com diferentes Memory Contracts
+- Scripts com diferentes Constitutions
+- Scripts com diferentes Guardians
+
+O "serviço" é só um script que tem contrato para atender outros.
+
+---
+
+### Direito ao Esquecimento
+
+```typescript
+// Usuário pode pedir para esquecer
+await intent('request:forget', {
+  scope: 'session',      // Só essa sessão
+  // ou
+  scope: 'all',          // Tudo sobre mim
+  reason: 'LGPD Art. 18',
+});
+
+// Sistema verifica:
+// 1. Memory Contract permite esquecimento?
+// 2. Há obrigação legal de reter?
+// 3. Se pode esquecer, cria evento:
+
+{
+  type: 'DataForgotten',
+  payload: {
+    requestedBy: userId,
+    scope: 'session',
+    eventsArchived: ['evt-1', 'evt-2', ...],
+    reason: 'LGPD Art. 18',
+  }
+}
+```
 
 ---
 
@@ -11,9 +214,134 @@ Não existem "tipos de memória" no UBL.
 Existe:
 1. **Ledger** - Todos os eventos, sempre
 2. **Query** - O que eu quero saber
-3. **Acesso** - O que eu tenho permissão de ver
+3. **Acesso** - O que eu tenho permissão de ver (via Agreements)
 
-**Memória é o resultado de Query + Acesso.**
+**Memória = Query + Agreements**
+
+---
+
+## Acesso via Agreements
+
+Acesso não é mágico. Vem de **Agreements com cláusulas específicas**.
+
+### Tipos de Agreement que dão acesso
+
+| Agreement | Entre | Cláusulas típicas |
+|-----------|-------|-------------------|
+| **Guardianship** | Guardian ↔ Script | `read:trajectory`, `read:wallet`, `write:budget`, `write:constitution` |
+| **Session** | Serviço ↔ Usuário | `read:session`, `write:events`, `read:entities` |
+| **Collaboration** | Script ↔ Script | `read:shadow`, `read:output`, `write:request` |
+| **Employment** | Cliente ↔ Script | `read:output`, `write:task`, `read:status` |
+| **Observation** | Auditor ↔ Sistema | `read:all`, `read:trajectory` |
+
+### Cláusulas de Acesso
+
+```typescript
+interface AccessClause {
+  // O que pode fazer
+  action: 'read' | 'write' | 'delete' | 'admin';
+  
+  // Em que recurso
+  resource: 
+    | 'trajectory'    // Histórico de ações
+    | 'wallet'        // Saldo e transações
+    | 'shadow'        // Entidades shadow
+    | 'memory'        // Eventos de memória
+    | 'session'       // Contexto de sessão
+    | 'constitution'  // Identidade/valores
+    | 'daemon'        // Estado do daemon
+    | 'output'        // Resultados de trabalho
+    | '*';            // Tudo
+  
+  // De quem
+  scope: EntityId | 'self' | 'children' | '*';
+  
+  // Por quanto tempo
+  validity?: {
+    from: Timestamp;
+    until?: Timestamp;
+  };
+  
+  // Com que limites
+  limits?: {
+    maxQueries?: number;
+    maxResults?: number;
+    rateLimit?: string;
+  };
+}
+```
+
+### Exemplos concretos
+
+**Guardian vê tudo do script:**
+```typescript
+{
+  agreementType: 'Guardianship',
+  clauses: [
+    { action: 'read', resource: '*', scope: scriptId },
+    { action: 'write', resource: 'budget', scope: scriptId },
+    { action: 'write', resource: 'constitution', scope: scriptId },
+  ]
+}
+```
+
+**Cliente vê só output:**
+```typescript
+{
+  agreementType: 'Employment',
+  clauses: [
+    { action: 'read', resource: 'output', scope: scriptId },
+    { action: 'write', resource: 'task', scope: scriptId },
+  ]
+}
+```
+
+**Sessão temporária:**
+```typescript
+{
+  agreementType: 'Session',
+  clauses: [
+    { 
+      action: 'read', 
+      resource: 'session', 
+      scope: sessionId,
+      validity: { from: now, until: now + 3600000 }  // 1 hora
+    },
+  ]
+}
+```
+
+### Como o ABAC usa isso
+
+```typescript
+// Quando alguém faz uma query
+const events = await eventStore.query({
+  filter: { aggregateId: targetId },
+  actor: currentActor,
+});
+
+// O ABAC verifica:
+// 1. Quais Agreements o actor tem?
+// 2. Algum Agreement tem cláusula que permite essa leitura?
+// 3. A cláusula está válida (tempo, limites)?
+// 4. Se sim, retorna eventos. Se não, nega.
+```
+
+### Memória é consequência
+
+```
+Script quer "lembrar" de algo
+         ↓
+Query no EventStore
+         ↓
+ABAC verifica Agreements
+         ↓
+Retorna eventos permitidos
+         ↓
+Isso É a "memória" do script
+```
+
+Não existe memória separada. Existe o que os Agreements permitem ler.
 
 ---
 
