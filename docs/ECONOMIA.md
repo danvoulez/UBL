@@ -291,57 +291,81 @@ Isso nunca pode ser apagado. É a verdade.
 
 ---
 
-## Taxa de Juros Flutuante
+## Tripé Macroeconômico (Sistema de Faixas)
+
+Em vez de taxas flutuantes com números malucos, usamos **3 faixas simples**:
+
+```
+       LOW          NORMAL          HIGH
+        🟢            🟡              🔴
+```
+
+### Taxa de Juros
+
+| Faixa | Taxa | Quando |
+|-------|------|--------|
+| 🟢 **LOW** | 2% | Deflação - estimular economia |
+| 🟡 **NORMAL** | 5% | Inflação estável (0-4%) |
+| 🔴 **HIGH** | 10% | Inflação alta (>4%) - restringir |
+
+### Taxa de Câmbio (1 ◆ = X USD)
+
+| Faixa | Taxa | Significado |
+|-------|------|-------------|
+| 🟢 **LOW** | $0.008 | ◆ fraco - estimula atividade |
+| 🟡 **NORMAL** | $0.010 | Baseline |
+| 🔴 **HIGH** | $0.012 | ◆ forte - importações baratas |
+
+### Inflação (Calculada)
+
+| Nível | Ação |
+|-------|------|
+| ≤ 0% (deflação) | Mover para faixa LOW |
+| 0-4% (estável) | Manter NORMAL |
+| > 4% (alta) | Mover para faixa HIGH |
 
 ### Como Funciona
 
-A taxa de juros **ajusta automaticamente** baseada na inflação:
-
 ```
-Inflação alta → Sobe juros → Menos empréstimos → Menos dinheiro criado
-Inflação baixa → Baixa juros → Mais empréstimos → Estimula economia
-```
-
-### Limites
-
-| Limite | Valor | O que acontece |
-|--------|-------|----------------|
-| **Mínimo** | 1% | Nunca vai abaixo disso |
-| **Máximo** | 15% | Teto dos juros |
-| **Acima do teto** | - | **BURN** (último recurso) |
-
-### Exemplo de Ajuste
-
-```
-Situação: Inflação em 8% (meta é 2%)
-
-1. Sistema detecta: inflação 6% acima da meta
-2. Calcula ajuste: +0.6% na taxa (10% do gap)
-3. Taxa sobe: 5% → 5.6%
-4. Novos empréstimos ficam mais caros
-5. Menos gente pega empréstimo
-6. Menos dinheiro é criado
-7. Inflação tende a cair
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   Inflação calculada periodicamente                         │
+│              ↓                                              │
+│   Se < 0%  → Faixas vão para LOW (estimular)               │
+│   Se 0-4%  → Faixas ficam NORMAL                           │
+│   Se > 4%  → Faixas vão para HIGH (restringir)             │
+│              ↓                                              │
+│   Cooldown de 1 semana entre mudanças (estabilidade)       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Quando Burn Acontece
+### Conversão de Moeda
+
+Quando agente recebe dinheiro real (USD, EUR, etc):
 
 ```
-Se taxa já está em 15% E inflação ainda está alta:
+Agente recebe $100 USD por um trabalho
 
-1. Juros não podem subir mais (teto)
-2. Sistema ativa "burn mode"
-3. Queima parte do Treasury (até 10% por período)
-4. Remove dinheiro de circulação
-5. Inflação cai
+Opção 1: Não converter
+  → $100 fica registrado como "saldo externo"
+  → Não controlamos, só tracking
+
+Opção 2: Converter para ◆
+  → Taxa atual: $0.01 por ◆ (faixa NORMAL)
+  → Spread: 2% (receita do operador)
+  → Taxa efetiva: $0.0102
+  → Agente recebe: 9,804 ◆
+  → Operador ganha: ~$2
 ```
 
-### Por que é Elegante?
+### Por que Faixas são Melhores?
 
-1. **Automático** - Não precisa intervenção manual
-2. **Gradual** - Ajustes pequenos, não choques
-3. **Previsível** - Regras claras, sem surpresas
-4. **Último recurso** - Burn só quando juros não bastam
+1. **Simples** - 3 valores, não decimais infinitos
+2. **Comunicável** - "Juros estão ALTOS" vs "Juros estão em 7.34%"
+3. **Estável** - Mudanças só semanais, não a cada segundo
+4. **Estatisticamente igual** - Mesmo efeito prático
+5. **Previsível** - Todo mundo sabe as regras
 
 ### Mudanças de Política
 
