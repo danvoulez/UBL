@@ -109,6 +109,29 @@ export const CONTAINER_PHYSICS = {
     permeability: 'Gated',
     execution: 'Disabled',
   } as ContainerPhysics,
+
+  /** 
+   * Agreement Bundle - Container of related Agreements
+   * Used for onboarding, employment contracts, etc.
+   * All agreements in the bundle are created atomically (all-or-nothing).
+   */
+  AgreementBundle: {
+    fungibility: 'Strict',      // Agreements don't duplicate
+    topology: 'Objects',        // Contains Agreement objects
+    permeability: 'Sealed',     // All-or-nothing, no partial bundles
+    execution: 'Disabled',      // Just groups, doesn't execute
+  } as ContainerPhysics,
+
+  /**
+   * Session Bundle - Temporary container for session agreements
+   * Auto-expires, contains MemoryContract + Session agreement
+   */
+  SessionBundle: {
+    fungibility: 'Transient',   // Temporary, expires
+    topology: 'Objects',        // Contains agreements
+    permeability: 'Sealed',     // Created atomically
+    execution: 'Disabled',
+  } as ContainerPhysics,
 } as const;
 
 export type ContainerType = keyof typeof CONTAINER_PHYSICS;
