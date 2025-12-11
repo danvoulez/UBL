@@ -27,6 +27,7 @@ import { WORKSPACE_INTENTS } from './workspace-intents';
 import { ADMIN_INTENTS } from './admin-intents';
 import { AGENT_ECONOMY_INTENTS } from './agent-economy-intents';
 import { PERCEPTION_INTENTS } from './perception-intents';
+import { CONSCIOUSNESS_INTENTS } from './consciousness-intents';
 
 /**
  * All built-in intents aggregated from domain modules.
@@ -42,6 +43,7 @@ export const ALL_INTENTS: readonly IntentDefinition[] = [
   ...ADMIN_INTENTS,
   ...AGENT_ECONOMY_INTENTS,
   ...PERCEPTION_INTENTS,
+  ...CONSCIOUSNESS_INTENTS,
 ];
 
 // Re-export individual modules for selective imports
@@ -55,3 +57,4 @@ export { WORKSPACE_INTENTS } from './workspace-intents';
 export { ADMIN_INTENTS } from './admin-intents';
 export { AGENT_ECONOMY_INTENTS } from './agent-economy-intents';
 export { PERCEPTION_INTENTS } from './perception-intents';
+export { CONSCIOUSNESS_INTENTS } from './consciousness-intents';
