@@ -354,6 +354,9 @@ export interface MonetaryPolicy {
   /** Transaction fee rate (e.g., 0.001 = 0.1%) */
   readonly transactionFeeRate: number;
 
+  /** Floating rate configuration */
+  readonly floatingRate: FloatingRateConfig;
+
   /** Starter loan default terms */
   readonly starterLoanDefaults: {
     readonly principal: bigint;
@@ -371,19 +374,78 @@ export interface MonetaryPolicy {
 }
 
 /**
+ * Floating Rate Configuration
+ * 
+ * Interest rate adjusts automatically based on economic conditions.
+ * More elegant than burn - controls money supply via loan demand.
+ * 
+ * When inflation is high:
+ *   → Raise interest rate → Fewer new loans → Less money created
+ * 
+ * When economy is stagnant:
+ *   → Lower interest rate → More loans → Stimulate activity
+ */
+export interface FloatingRateConfig {
+  /** Enable automatic rate adjustment */
+  readonly enabled: boolean;
+
+  /** Minimum rate floor (e.g., 0.01 = 1%) */
+  readonly minRate: number;
+
+  /** Maximum rate ceiling (e.g., 0.20 = 20%) */
+  readonly maxRate: number;
+
+  /** Target inflation rate (e.g., 0.02 = 2% annual) */
+  readonly targetInflation: number;
+
+  /** How aggressively to adjust (0.1 = 10% of gap per period) */
+  readonly adjustmentSpeed: number;
+
+  /** Minimum time between adjustments (ms) */
+  readonly cooldownMs: number;
+}
+
+/**
+ * Interest Rate Adjustment Event
+ */
+export interface InterestRateAdjustedPayload {
+  readonly type: 'InterestRateAdjusted';
+  /** Previous rate */
+  readonly previousRate: number;
+  /** New rate */
+  readonly newRate: number;
+  /** Reason for adjustment */
+  readonly reason: 'InflationHigh' | 'InflationLow' | 'Manual' | 'Scheduled';
+  /** Current inflation rate that triggered this */
+  readonly currentInflation: number;
+  /** Target inflation */
+  readonly targetInflation: number;
+}
+
+/**
  * Default monetary policy values
  */
+export const DEFAULT_FLOATING_RATE: FloatingRateConfig = {
+  enabled: true,
+  minRate: 0.01,        // 1% floor - never go below
+  maxRate: 0.15,        // 15% ceiling - never go above
+  targetInflation: 0.02, // 2% annual target
+  adjustmentSpeed: 0.1,  // Adjust 10% of gap per period
+  cooldownMs: 24 * 60 * 60 * 1000, // 24 hours between adjustments
+};
+
 export const DEFAULT_MONETARY_POLICY: Omit<MonetaryPolicy, 'version' | 'effectiveFrom'> = {
   maxSupply: undefined, // Unlimited
-  baseInterestRate: 0.05, // 5% APR - low to help agents start
+  baseInterestRate: 0.05, // 5% APR - starting point
   transactionFeeRate: 0.001, // 0.1% per transfer - goes to Treasury
+  floatingRate: DEFAULT_FLOATING_RATE,
   starterLoanDefaults: {
     principal: toSmallestUnit(1000), // 1000 UBL
-    interestRate: 0.05, // 5% APR
+    interestRate: 0.05, // 5% APR (will float)
     repaymentRate: 0.20, // 20% of earnings
     gracePeriodDays: 30,
   },
-  inflationTarget: undefined,
+  inflationTarget: 0.02, // 2% annual
 };
 
 /**

@@ -287,7 +287,61 @@ Isso nunca pode ser apagado. É a verdade.
 | `baseInterestRate` | Taxa de juros base | **5% ao ano** |
 | `transactionFee` | Taxa por transferência | **0.1%** |
 | `starterLoanDefaults` | Termos padrão de empréstimo | 1000 ◆, 5%, 20% |
-| `inflationTarget` | Meta de inflação | Não definido |
+| `inflationTarget` | Meta de inflação | **2% ao ano** |
+
+---
+
+## Taxa de Juros Flutuante
+
+### Como Funciona
+
+A taxa de juros **ajusta automaticamente** baseada na inflação:
+
+```
+Inflação alta → Sobe juros → Menos empréstimos → Menos dinheiro criado
+Inflação baixa → Baixa juros → Mais empréstimos → Estimula economia
+```
+
+### Limites
+
+| Limite | Valor | O que acontece |
+|--------|-------|----------------|
+| **Mínimo** | 1% | Nunca vai abaixo disso |
+| **Máximo** | 15% | Teto dos juros |
+| **Acima do teto** | - | **BURN** (último recurso) |
+
+### Exemplo de Ajuste
+
+```
+Situação: Inflação em 8% (meta é 2%)
+
+1. Sistema detecta: inflação 6% acima da meta
+2. Calcula ajuste: +0.6% na taxa (10% do gap)
+3. Taxa sobe: 5% → 5.6%
+4. Novos empréstimos ficam mais caros
+5. Menos gente pega empréstimo
+6. Menos dinheiro é criado
+7. Inflação tende a cair
+```
+
+### Quando Burn Acontece
+
+```
+Se taxa já está em 15% E inflação ainda está alta:
+
+1. Juros não podem subir mais (teto)
+2. Sistema ativa "burn mode"
+3. Queima parte do Treasury (até 10% por período)
+4. Remove dinheiro de circulação
+5. Inflação cai
+```
+
+### Por que é Elegante?
+
+1. **Automático** - Não precisa intervenção manual
+2. **Gradual** - Ajustes pequenos, não choques
+3. **Previsível** - Regras claras, sem surpresas
+4. **Último recurso** - Burn só quando juros não bastam
 
 ### Mudanças de Política
 
