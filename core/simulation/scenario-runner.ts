@@ -301,14 +301,14 @@ export class ScenarioRunner {
     for (const script of scripts) {
       // Work and earn (based on traits)
       const earnings = this.calculateEarnings(script.traits, tick);
-      script.state.walletBalance += BigInt(Math.floor(earnings));
+      script.state.walletBalance += BigInt(Math.round(earnings));
       
       // Pay loan (if any)
       if (script.state.loanOutstanding > 0n) {
-        const payment = BigInt(Math.min(
+        const payment = BigInt(Math.round(Math.min(
           Number(script.state.walletBalance) * 0.1,
           Number(script.state.loanOutstanding)
-        ));
+        )));
         script.state.walletBalance -= payment;
         script.state.loanOutstanding -= payment;
       }
