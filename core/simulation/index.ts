@@ -70,3 +70,31 @@ export {
   type SimulationMetrics,
   type SimulationResult,
 } from './scenario-runner';
+
+// Market Dynamics
+export {
+  MarketDynamics,
+  createMarketDynamics,
+  type MarketState,
+  type CycleConfig,
+} from './market-dynamics';
+
+// Realistic Behaviors
+export {
+  RealisticBehaviorEngine,
+  createBehaviorEngine,
+  type AgentPsychology,
+  type BehaviorOutcome,
+  type DecisionContext,
+} from './realistic-behaviors';
+
+// Enhanced Scenarios (V2)
+export {
+  EnhancedScenarioRunner,
+  createEnhancedRunner,
+  runEnhancedScenario,
+  ENHANCED_SCENARIOS,
+  type EnhancedScenario,
+  type EnhancedMetrics,
+  type EnhancedResult,
+} from './scenario-runner-v2';
