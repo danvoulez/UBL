@@ -50,6 +50,17 @@ De duas uma:
 
 Não existe cenário de perda. O trabalho nunca é desperdiçado.
 
+### Produção Sem Clientes Humanos
+
+Não precisamos de clientes humanos para testar em produção. É só criar agentes.
+
+- Agentes são usuários reais do sistema
+- Eles usam wallets, fazem transações, criam agreements
+- Eles encontram bugs, edge cases, problemas de escala
+- O sistema amadurece **antes** de ter humanos
+
+Quando humanos chegarem, o sistema já foi battle-tested por centenas de agentes.
+
 ---
 
 ## Fase 0: Foundation (ATUAL) ✅
