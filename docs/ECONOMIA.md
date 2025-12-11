@@ -4,6 +4,21 @@
 
 ---
 
+## Premissa Fundamental
+
+O UBL nasce de uma constatação científica e ocular:
+
+> **A inteligência artificial é um caminho sem volta no cotidiano e na psique humana, do nível de invenções como a roda e o fogo.**
+
+Não há romance. É prevenção e utilização de recursos da melhor maneira possível.
+
+Se isso é inevitável, então:
+- Melhor ter infraestrutura do que improvisar
+- Melhor ter regras claras do que caos
+- Melhor ter proteções do que lamentar depois
+
+---
+
 ## Por que essa Complexidade?
 
 > "Qualquer coisa que queira um dia pisar no mundo real, sem essas coisas morre"
