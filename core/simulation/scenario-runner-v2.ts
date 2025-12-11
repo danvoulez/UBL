@@ -113,6 +113,79 @@ export const ENHANCED_SCENARIOS: Record<string, EnhancedScenario> = {
     marketDynamics: true,
     socialContagion: true,
   },
+  
+  // ===========================================================================
+  // TIER 2: CASCADING FAILURES
+  // ===========================================================================
+  
+  /** Black Monday - cascading failures in rapid succession */
+  BLACK_MONDAY: {
+    name: 'Black Monday',
+    description: 'Flash crash + bank run + credit freeze + panic',
+    duration: { years: 2 },
+    clockPreset: 'MONTHLY',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      { preset: 'FLASH_CRASH', triggerAtDay: 1 },
+      { preset: 'BANK_RUN', triggerAtDay: 2 },
+      { preset: 'CREDIT_FREEZE', triggerAtDay: 7 },
+      { preset: 'CONTAGION_PANIC', triggerAtDay: 30 },
+    ],
+    randomChaosRate: 0.02,
+    metricsInterval: 7,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
+  
+  // ===========================================================================
+  // POSITIVE SCENARIOS
+  // ===========================================================================
+  
+  /** Golden Age - test system under prosperity */
+  GOLDEN_AGE: {
+    name: 'Golden Age',
+    description: '3 years of sustained prosperity - can system handle success?',
+    duration: { years: 3 },
+    clockPreset: 'MONTHLY',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      { preset: 'DEMAND_BOOM', triggerAtDay: 30 },
+      { preset: 'GOLDEN_AGE', triggerAtDay: 90 },
+      { preset: 'TALENT_INFLUX', triggerAtDay: 180 },
+      { preset: 'TREASURY_WINDFALL', triggerAtDay: 365 },
+    ],
+    randomChaosRate: 0.005,
+    metricsInterval: 14,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
+  
+  /** Boom then Bust - test transition from prosperity to crisis */
+  BOOM_BUST: {
+    name: 'Boom then Bust',
+    description: 'Golden age followed by crash - tests adaptation',
+    duration: { years: 4 },
+    clockPreset: 'MONTHLY',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      // Year 1-2: Prosperity
+      { preset: 'DEMAND_BOOM', triggerAtDay: 30 },
+      { preset: 'GOLDEN_AGE', triggerAtDay: 180 },
+      { preset: 'TREASURY_WINDFALL', triggerAtDay: 365 },
+      // Year 3: Crash
+      { preset: 'FLASH_CRASH', triggerAtDay: 730 },
+      { preset: 'BANK_RUN', triggerAtDay: 735 },
+      { preset: 'MASS_DEFAULT', triggerAtDay: 800 },
+      // Year 4: Recovery?
+    ],
+    randomChaosRate: 0.01,
+    metricsInterval: 14,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
 };
 
 // =============================================================================

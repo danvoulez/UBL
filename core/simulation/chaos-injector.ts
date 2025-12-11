@@ -14,6 +14,7 @@ import type { AgentPopulation, SimulatedScript, SimulatedGuardian } from './agen
 // =============================================================================
 
 export type ChaosEventType =
+  // Negative events
   | 'MarketCrash'           // Sudden drop in demand
   | 'ModelRelease'          // New AI model makes old skills obsolete
   | 'CartelFormation'       // Bad actors collude
@@ -23,7 +24,18 @@ export type ChaosEventType =
   | 'GuardianExit'          // Guardian abandons their scripts
   | 'ReputationInflation'   // Everyone gets perfect scores
   | 'DDoS'                  // System overload
-  | 'RegulatoryShock';      // New rules change everything
+  | 'RegulatoryShock'       // New rules change everything
+  // Cascading failures (TIER 2)
+  | 'FlashCrash'            // -80% demand instantaneous
+  | 'BankRun'               // Everyone withdraws at once
+  | 'CreditFreeze'          // No new loans for period
+  | 'ContagionPanic'        // Mood collapses to -1.0
+  // Positive events
+  | 'DemandBoom'            // Sudden increase in demand
+  | 'GoldenAge'             // Sustained prosperity
+  | 'TalentInflux'          // New high-quality scripts join
+  | 'TreasuryWindfall'      // Unexpected surplus
+  | 'ReputationReset';      // Fair recalibration
 
 export interface ChaosEvent {
   type: ChaosEventType;
@@ -125,6 +137,111 @@ export const CHAOS_SCENARIOS = {
     params: {
       inflatedScore: 100,
       detectionDifficulty: 0.8,
+    },
+  },
+  
+  // ===========================================================================
+  // TIER 2: CASCADING FAILURES
+  // ===========================================================================
+  
+  /** Flash crash - 80% demand drop in one day */
+  FLASH_CRASH: {
+    type: 'FlashCrash' as const,
+    severity: 'Critical' as const,
+    duration: 1,
+    params: {
+      demandDrop: 0.8,
+      panicMultiplier: 2.0,
+      recoveryDelay: 7,
+    },
+  },
+  
+  /** Bank run - everyone tries to withdraw */
+  BANK_RUN: {
+    type: 'BankRun' as const,
+    severity: 'Critical' as const,
+    duration: 3,
+    params: {
+      withdrawalRate: 0.9,
+      liquidityStress: 0.95,
+      contagionSpeed: 0.3,
+    },
+  },
+  
+  /** Credit freeze - no new loans */
+  CREDIT_FREEZE: {
+    type: 'CreditFreeze' as const,
+    severity: 'High' as const,
+    duration: 90,
+    params: {
+      loanAvailability: 0,
+      existingLoanPressure: 1.5,
+      interestSpike: 3.0,
+    },
+  },
+  
+  /** Contagion panic - mood collapses */
+  CONTAGION_PANIC: {
+    type: 'ContagionPanic' as const,
+    severity: 'High' as const,
+    duration: 14,
+    params: {
+      moodFloor: -1.0,
+      spreadRate: 0.2,
+      rationalityOverride: true,
+    },
+  },
+  
+  // ===========================================================================
+  // POSITIVE SCENARIOS
+  // ===========================================================================
+  
+  /** Demand boom - 3x demand increase */
+  DEMAND_BOOM: {
+    type: 'DemandBoom' as const,
+    severity: 'High' as const,
+    duration: 180,
+    params: {
+      demandMultiplier: 3.0,
+      sustainedGrowth: 0.05,
+      qualityPressure: -0.2,
+    },
+  },
+  
+  /** Golden age - sustained prosperity */
+  GOLDEN_AGE: {
+    type: 'GoldenAge' as const,
+    severity: 'Medium' as const,
+    duration: 365,
+    params: {
+      demandMultiplier: 2.0,
+      moodBoost: 0.5,
+      reputationInflation: 0.1,
+      complacencyRisk: 0.3,
+    },
+  },
+  
+  /** Talent influx - high quality new scripts */
+  TALENT_INFLUX: {
+    type: 'TalentInflux' as const,
+    severity: 'Medium' as const,
+    duration: 90,
+    params: {
+      newScriptRate: 0.2,
+      qualityBonus: 0.3,
+      competitionIncrease: 0.4,
+    },
+  },
+  
+  /** Treasury windfall - unexpected surplus */
+  TREASURY_WINDFALL: {
+    type: 'TreasuryWindfall' as const,
+    severity: 'Low' as const,
+    duration: 1,
+    params: {
+      surplusAmount: 1000000,
+      distributionMethod: 'UBI',
+      inflationRisk: 0.1,
     },
   },
 };
@@ -375,6 +492,165 @@ export class ChaosInjector {
           scriptsAffected: scripts.length,
           economicImpact: 0,
           systemAlert: 'WARNING: Reputation system compromised',
+        };
+      }
+      
+      // =========================================================================
+      // TIER 2: CASCADING FAILURES
+      // =========================================================================
+      
+      case 'FlashCrash': {
+        const drop = (event.params.demandDrop as number) ?? 0.8;
+        const panicMult = (event.params.panicMultiplier as number) ?? 2.0;
+        
+        // Immediate reputation hit from panic
+        for (const script of scripts) {
+          script.state.reputation *= (1 - drop * 0.3);
+        }
+        
+        return {
+          type: event.type,
+          description: `FLASH CRASH: Demand dropped ${drop * 100}% instantly`,
+          scriptsAffected: scripts.length,
+          economicImpact: -scripts.length * 100 * drop * panicMult,
+          ongoingEffect: { demandMultiplier: 1 - drop, panicMode: true },
+          systemAlert: 'CRITICAL: Flash crash detected - circuit breakers engaged',
+        };
+      }
+      
+      case 'BankRun': {
+        const withdrawRate = (event.params.withdrawalRate as number) ?? 0.9;
+        let totalWithdrawn = 0n;
+        
+        // Everyone tries to withdraw
+        for (const script of scripts) {
+          const withdrawal = BigInt(Math.floor(Number(script.state.walletBalance) * withdrawRate));
+          script.state.walletBalance -= withdrawal;
+          totalWithdrawn += withdrawal;
+        }
+        
+        return {
+          type: event.type,
+          description: `BANK RUN: ${withdrawRate * 100}% of funds withdrawn`,
+          scriptsAffected: scripts.length,
+          economicImpact: -Number(totalWithdrawn),
+          systemAlert: 'CRITICAL: Liquidity crisis - bank run in progress',
+        };
+      }
+      
+      case 'CreditFreeze': {
+        const pressure = (event.params.existingLoanPressure as number) ?? 1.5;
+        
+        // Increase loan pressure on everyone
+        for (const script of scripts) {
+          if (script.state.loanOutstanding > 0n) {
+            script.state.loanOutstanding = BigInt(
+              Math.floor(Number(script.state.loanOutstanding) * pressure)
+            );
+          }
+        }
+        
+        return {
+          type: event.type,
+          description: `CREDIT FREEZE: No new loans, existing debt increased ${pressure}x`,
+          scriptsAffected: scripts.filter(s => s.state.loanOutstanding > 0n).length,
+          economicImpact: -scripts.length * 50,
+          ongoingEffect: { loanAvailability: 0, interestMultiplier: pressure },
+          systemAlert: 'WARNING: Credit markets frozen',
+        };
+      }
+      
+      case 'ContagionPanic': {
+        const moodFloor = (event.params.moodFloor as number) ?? -1.0;
+        
+        // Force mood collapse - this will be picked up by behavior engine
+        return {
+          type: event.type,
+          description: `CONTAGION PANIC: Mass hysteria spreading`,
+          scriptsAffected: scripts.length,
+          economicImpact: -scripts.length * 30,
+          ongoingEffect: { moodFloor, panicSpreading: true },
+          systemAlert: 'WARNING: Contagion panic detected',
+        };
+      }
+      
+      // =========================================================================
+      // POSITIVE SCENARIOS
+      // =========================================================================
+      
+      case 'DemandBoom': {
+        const multiplier = (event.params.demandMultiplier as number) ?? 3.0;
+        
+        // Boost everyone's balance as sign of good times
+        for (const script of scripts) {
+          script.state.walletBalance += BigInt(Math.floor(100 * multiplier));
+        }
+        
+        return {
+          type: event.type,
+          description: `DEMAND BOOM: Market demand increased ${multiplier}x`,
+          scriptsAffected: scripts.length,
+          economicImpact: scripts.length * 100 * multiplier,
+          ongoingEffect: { demandMultiplier: multiplier },
+          systemAlert: '📈 POSITIVE: Demand boom detected',
+        };
+      }
+      
+      case 'GoldenAge': {
+        const multiplier = (event.params.demandMultiplier as number) ?? 2.0;
+        const moodBoost = (event.params.moodBoost as number) ?? 0.5;
+        
+        // Boost reputation slightly
+        for (const script of scripts) {
+          script.state.reputation = Math.min(100, script.state.reputation * 1.1);
+          script.state.walletBalance += BigInt(Math.floor(50 * multiplier));
+        }
+        
+        return {
+          type: event.type,
+          description: `GOLDEN AGE: Sustained prosperity begins`,
+          scriptsAffected: scripts.length,
+          economicImpact: scripts.length * 50 * multiplier,
+          ongoingEffect: { demandMultiplier: multiplier, moodBoost },
+          systemAlert: '🌟 POSITIVE: Golden age initiated',
+        };
+      }
+      
+      case 'TalentInflux': {
+        const qualityBonus = (event.params.qualityBonus as number) ?? 0.3;
+        
+        // Existing scripts get competition pressure but also network effects
+        for (const script of scripts) {
+          if (script.traits.skillLevel > 0.7) {
+            script.state.reputation += 5; // Top talent benefits from network
+          }
+        }
+        
+        return {
+          type: event.type,
+          description: `TALENT INFLUX: High-quality new entrants joining`,
+          scriptsAffected: scripts.length,
+          economicImpact: scripts.length * 20,
+          ongoingEffect: { competitionIncrease: 0.4, qualityBonus },
+          systemAlert: '📈 POSITIVE: Talent influx detected',
+        };
+      }
+      
+      case 'TreasuryWindfall': {
+        const surplus = (event.params.surplusAmount as number) ?? 1000000;
+        const perScript = Math.floor(surplus / scripts.length);
+        
+        // Distribute UBI
+        for (const script of scripts) {
+          script.state.walletBalance += BigInt(perScript);
+        }
+        
+        return {
+          type: event.type,
+          description: `TREASURY WINDFALL: ${surplus} distributed as UBI (${perScript} per script)`,
+          scriptsAffected: scripts.length,
+          economicImpact: surplus,
+          systemAlert: '💰 POSITIVE: Treasury windfall distributed',
         };
       }
       
