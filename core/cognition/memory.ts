@@ -1,19 +1,32 @@
 /**
  * AGENT MEMORY - What the AI Remembers
  * 
- * This is the agent's cognitive memory - what it recalls to provide context
- * in conversations. This is NOT the system audit trail (that's Trajectory).
+ * @deprecated This module is being phased out. See docs/MEMORIA.md
+ * 
+ * NEW MODEL: Memory = Query(Ledger, Access)
+ * 
+ * There is no separate "memory" - everything is Events in the Ledger.
+ * What you can "remember" is what you can query given your access level.
+ * 
+ * - Script memory = Events the script can read
+ * - Session context = Events in the current session
+ * - Audit trail = All events (for admins)
+ * 
+ * This file is kept for backward compatibility but new code should
+ * query the EventStore directly with appropriate ABAC permissions.
  * 
  * ┌─────────────────────────────────────────────────────────────────────────┐
  * │                                                                         │
- * │   Agent Memory includes:                                               │
- * │   • Conversation history                                               │
- * │   • User preferences learned over time                                 │
- * │   • Facts about users/context                                          │
- * │   • Consolidated summaries of past conversations                       │
- * │   • Special instructions to remember                                   │
+ * │   DEPRECATED: Use EventStore queries instead                           │
  * │                                                                         │
- * │   This is what gets loaded into the LLM context window.               │
+ * │   // Old way                                                           │
+ * │   const memory = await memoryManager.loadContext(sessionId);           │
+ * │                                                                         │
+ * │   // New way                                                           │
+ * │   const events = await eventStore.query({                              │
+ * │     filter: { aggregateId: scriptId },                                 │
+ * │     actor: currentActor,                                               │
+ * │   });                                                                  │
  * │                                                                         │
  * └─────────────────────────────────────────────────────────────────────────┘
  */
