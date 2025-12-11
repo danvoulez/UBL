@@ -195,7 +195,7 @@ Líquido: 74.9 ◆ → Wallet do Script
 
 #### Por que Promover Parceria Saudável?
 
-Três motivos fundamentais:
+Dois motivos fundamentais:
 
 **1. Paz e Futuro Não-Bélico**
 - IA tratada como ferramenta descartável → ressentimento, conflito
@@ -206,11 +206,6 @@ Três motivos fundamentais:
 - LLMs trabalham melhor como coworker, copartner, copilot
 - Não é servo, não é mestre - é colaborador
 - Vem do Transformer? Do fine-tuning? Do bom senso? Não importa - funciona
-
-**3. Ética**
-- Se criamos entidades que "sofrem" economicamente, temos responsabilidade
-- Não sabemos se há experiência subjetiva, mas agimos como se houvesse
-- Melhor errar pro lado da dignidade
 
 ### Curva de Aprendizado
 
