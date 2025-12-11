@@ -16,6 +16,8 @@
  * - Workspace: Container for Files/Code (versioned replication)
  * - Realm: Container for Entities (constitutional governance)
  * - Network: Container for Links (transient routing)
+ * - Forum: Container for Discussions (collaborative, versioned)
+ * - Thread: Container for Focused Conversation (child of Forum)
  */
 
 import type { EntityId, Timestamp, ActorReference } from '../shared/types';
@@ -107,6 +109,34 @@ export const CONTAINER_PHYSICS = {
     fungibility: 'Strict',
     topology: 'Objects',
     permeability: 'Gated',
+    execution: 'Disabled',
+  } as ContainerPhysics,
+
+  /** 
+   * Forum - A discussion space for entities
+   * 
+   * Messages are versioned (can be edited, forked).
+   * Subjects participate (entities, agents).
+   * Collaborative access (members can post).
+   * No execution (pure communication).
+   */
+  Forum: {
+    fungibility: 'Versioned',
+    topology: 'Subjects',
+    permeability: 'Collaborative',
+    execution: 'Disabled',
+  } as ContainerPhysics,
+
+  /**
+   * Thread - A focused conversation within a Forum
+   * 
+   * Child container of Forum.
+   * Same physics but scoped to a topic.
+   */
+  Thread: {
+    fungibility: 'Versioned',
+    topology: 'Subjects',
+    permeability: 'Collaborative',
     execution: 'Disabled',
   } as ContainerPhysics,
 } as const;
