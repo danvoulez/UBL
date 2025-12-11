@@ -336,3 +336,168 @@ export function toSmallestUnit(amount: number): bigint {
 export function fromSmallestUnit(amount: bigint): number {
   return Number(amount) / 1000;
 }
+
+// ============================================================================
+// MONETARY AUTHORITY - The Central Bank of UBL
+// ============================================================================
+
+/**
+ * Monetary Policy - rules governing the UBL economy
+ */
+export interface MonetaryPolicy {
+  /** Maximum total supply (undefined = unlimited) */
+  readonly maxSupply?: bigint;
+
+  /** Base interest rate for loans (APR as decimal) */
+  readonly baseInterestRate: number;
+
+  /** Starter loan default terms */
+  readonly starterLoanDefaults: {
+    readonly principal: bigint;
+    readonly interestRate: number;
+    readonly repaymentRate: number;
+    readonly gracePeriodDays: number;
+  };
+
+  /** Inflation target (annual, as decimal) */
+  readonly inflationTarget?: number;
+
+  /** Version for policy updates */
+  readonly version: number;
+  readonly effectiveFrom: Timestamp;
+}
+
+/**
+ * Treasury State - derived from events
+ */
+export interface TreasuryState {
+  /** Total UBL ever minted */
+  readonly totalMinted: bigint;
+  /** Total UBL burned (fees, penalties) */
+  readonly totalBurned: bigint;
+  /** Current circulating supply (minted - burned) */
+  readonly circulatingSupply: bigint;
+  /** Total outstanding loans */
+  readonly outstandingLoans: bigint;
+  /** Current monetary policy */
+  readonly policy: MonetaryPolicy;
+}
+
+// ============================================================================
+// MONETARY EVENTS
+// ============================================================================
+
+/**
+ * CreditsMinted - Treasury creates new UBL
+ */
+export interface CreditsMintedPayload {
+  readonly type: 'CreditsMinted';
+  /** Amount minted (in smallest unit) */
+  readonly amount: bigint;
+  /** Recipient wallet */
+  readonly toWalletId: EntityId;
+  /** Reason for minting */
+  readonly reason: 'StarterLoan' | 'Reward' | 'Subsidy' | 'Correction';
+  /** Reference to authorizing agreement */
+  readonly authorizedBy: EntityId;
+}
+
+/**
+ * CreditsBurned - UBL removed from circulation
+ */
+export interface CreditsBurnedPayload {
+  readonly type: 'CreditsBurned';
+  /** Amount burned (in smallest unit) */
+  readonly amount: bigint;
+  /** Source wallet */
+  readonly fromWalletId: EntityId;
+  /** Reason for burning */
+  readonly reason: 'Fee' | 'Penalty' | 'LoanRepayment' | 'Correction';
+  /** Reference to authorizing agreement */
+  readonly authorizedBy?: EntityId;
+}
+
+/**
+ * CreditsTransferred - Movement between wallets
+ */
+export interface CreditsTransferredPayload {
+  readonly type: 'CreditsTransferred';
+  /** Amount transferred (in smallest unit) */
+  readonly amount: bigint;
+  /** Source wallet */
+  readonly fromWalletId: EntityId;
+  /** Destination wallet */
+  readonly toWalletId: EntityId;
+  /** Purpose of transfer */
+  readonly purpose: string;
+  /** Reference to governing agreement */
+  readonly agreementId?: EntityId;
+}
+
+/**
+ * WalletCreated - New wallet container
+ */
+export interface WalletCreatedPayload {
+  readonly type: 'WalletCreated';
+  /** Wallet ID (container ID) */
+  readonly walletId: EntityId;
+  /** Owner entity */
+  readonly ownerId: EntityId;
+  /** Currency code */
+  readonly currency: string;
+  /** Initial balance (usually 0, unless starter loan) */
+  readonly initialBalance: bigint;
+  /** Wallet rules */
+  readonly rules?: WalletRules;
+}
+
+/**
+ * LoanDisbursed - Starter loan issued
+ */
+export interface LoanDisbursedPayload {
+  readonly type: 'LoanDisbursed';
+  /** Loan agreement ID */
+  readonly loanId: EntityId;
+  /** Borrower entity */
+  readonly borrowerId: EntityId;
+  /** Guardian/guarantor entity */
+  readonly guarantorId: EntityId;
+  /** Principal amount */
+  readonly principal: bigint;
+  /** Interest rate (APR) */
+  readonly interestRate: number;
+  /** Repayment rate (% of earnings) */
+  readonly repaymentRate: number;
+  /** Grace period end */
+  readonly gracePeriodEnds: Timestamp;
+}
+
+/**
+ * LoanRepaymentMade - Payment towards loan
+ */
+export interface LoanRepaymentMadePayload {
+  readonly type: 'LoanRepaymentMade';
+  /** Loan agreement ID */
+  readonly loanId: EntityId;
+  /** Amount paid */
+  readonly amount: bigint;
+  /** Principal portion */
+  readonly principalPortion: bigint;
+  /** Interest portion */
+  readonly interestPortion: bigint;
+  /** Remaining balance */
+  readonly remainingBalance: bigint;
+}
+
+/**
+ * MonetaryPolicyUpdated - Policy change
+ */
+export interface MonetaryPolicyUpdatedPayload {
+  readonly type: 'MonetaryPolicyUpdated';
+  /** Previous policy version */
+  readonly previousVersion: number;
+  /** New policy */
+  readonly policy: MonetaryPolicy;
+  /** Reason for change */
+  readonly reason: string;
+}

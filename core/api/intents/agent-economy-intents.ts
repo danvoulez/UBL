@@ -30,8 +30,14 @@ import type {
   AutonomyLevelChangedPayload,
   TrajectorySpanRecordedPayload,
   TrajectorySpanPayload,
-  UBL_CREDIT,
+  WalletCreatedPayload,
+  CreditsTransferredPayload,
+  CreditsMintedPayload,
+  LoanDisbursedPayload,
+  LoanRepaymentMadePayload,
+  WalletRules,
 } from '../../schema/agent-economy';
+import { toSmallestUnit } from '../../schema/agent-economy';
 
 // ============================================================================
 // AGENT ECONOMY INTENTS
@@ -325,7 +331,7 @@ export const AGENT_ECONOMY_INTENTS: readonly IntentDefinition[] = [
 
       // Create new guardianship agreement
       const guardian: GuardianLink = {
-        guardianId: payload.newGuardianId as EntityId,
+        guardianId: asEntityId(payload.newGuardianId),
         effectiveFrom: Date.now(),
         agreementId,
         liabilityLimit: payload.liabilityLimit,
@@ -596,6 +602,389 @@ export const AGENT_ECONOMY_INTENTS: readonly IntentDefinition[] = [
           type: 'Updated',
           entity: { entityId: payload.entityId, autonomyLevel: payload.newLevel },
           changes: ['autonomyLevel'],
+        },
+        events: [{ id: event.id, type: event.type, sequence: event.sequence }],
+        affordances: [],
+        meta: {
+          processedAt: Date.now(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Create Wallet - Create a wallet for an entity
+  // -------------------------------------------------------------------------
+  {
+    name: 'create:wallet',
+    description: 'Create a wallet (container) for an entity to hold credits',
+    category: 'Asset',
+    schema: {
+      type: 'object',
+      required: ['ownerId'],
+      properties: {
+        ownerId: { type: 'string', description: 'Entity that owns this wallet' },
+        currency: { type: 'string', default: 'UBL' },
+        rules: {
+          type: 'object',
+          properties: {
+            maxBalance: { type: 'number' },
+            allowNegative: { type: 'boolean' },
+            requireApprovalAbove: { type: 'number' },
+          },
+        },
+      },
+    },
+    requiredPermissions: ['Wallet:create'],
+    examples: [],
+    handler: async (intent: Intent, context: HandlerContext): Promise<IntentResult> => {
+      const startTime = Date.now();
+      const payload = intent.payload as {
+        ownerId: string;
+        currency?: string;
+        rules?: WalletRules;
+      };
+
+      const walletId = Ids.entity();
+
+      const eventPayload: WalletCreatedPayload = {
+        type: 'WalletCreated',
+        walletId,
+        ownerId: asEntityId(payload.ownerId),
+        currency: payload.currency || 'UBL',
+        initialBalance: BigInt(0),
+        rules: payload.rules,
+      };
+
+      const event = await context.eventStore.append({
+        type: 'WalletCreated',
+        aggregateId: walletId,
+        aggregateType: 'Asset',
+        aggregateVersion: 1,
+        payload: eventPayload,
+        actor: intent.actor,
+        causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
+      });
+
+      return {
+        success: true,
+        outcome: {
+          type: 'Created',
+          entity: { walletId, ownerId: payload.ownerId, currency: payload.currency || 'UBL' },
+          id: walletId,
+        },
+        events: [{ id: event.id, type: event.type, sequence: event.sequence }],
+        affordances: [
+          { intent: 'transfer:credits', description: 'Transfer credits to/from this wallet', required: ['fromWalletId', 'toWalletId', 'amount'] },
+        ],
+        meta: {
+          processedAt: Date.now(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Transfer Credits - Move credits between wallets
+  // -------------------------------------------------------------------------
+  {
+    name: 'transfer:credits',
+    description: 'Transfer credits between wallets (requires agreement or authorization)',
+    category: 'Asset',
+    schema: {
+      type: 'object',
+      required: ['fromWalletId', 'toWalletId', 'amount', 'purpose'],
+      properties: {
+        fromWalletId: { type: 'string' },
+        toWalletId: { type: 'string' },
+        amount: { type: 'number', description: 'Amount in UBL (not smallest unit)' },
+        purpose: { type: 'string' },
+        agreementId: { type: 'string', description: 'Governing agreement for this transfer' },
+      },
+    },
+    requiredPermissions: ['Credits:transfer'],
+    examples: [],
+    handler: async (intent: Intent, context: HandlerContext): Promise<IntentResult> => {
+      const startTime = Date.now();
+      const payload = intent.payload as {
+        fromWalletId: string;
+        toWalletId: string;
+        amount: number;
+        purpose: string;
+        agreementId?: string;
+      };
+
+      const amountSmallest = toSmallestUnit(payload.amount);
+
+      const eventPayload: CreditsTransferredPayload = {
+        type: 'CreditsTransferred',
+        amount: amountSmallest,
+        fromWalletId: asEntityId(payload.fromWalletId),
+        toWalletId: asEntityId(payload.toWalletId),
+        purpose: payload.purpose,
+        agreementId: payload.agreementId ? asEntityId(payload.agreementId) : undefined,
+      };
+
+      // Record transfer on source wallet
+      const event = await context.eventStore.append({
+        type: 'CreditsTransferred',
+        aggregateId: asEntityId(payload.fromWalletId),
+        aggregateType: 'Asset',
+        aggregateVersion: 1, // TODO: get actual version
+        payload: eventPayload,
+        actor: intent.actor,
+        causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
+      });
+
+      return {
+        success: true,
+        outcome: {
+          type: 'Transferred',
+          asset: asEntityId(payload.fromWalletId),
+          to: asEntityId(payload.toWalletId),
+        },
+        events: [{ id: event.id, type: event.type, sequence: event.sequence }],
+        affordances: [],
+        meta: {
+          processedAt: Date.now(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Mint Credits - Treasury creates new UBL (restricted)
+  // -------------------------------------------------------------------------
+  {
+    name: 'mint:credits',
+    description: 'Create new UBL credits (Treasury only)',
+    category: 'Asset',
+    schema: {
+      type: 'object',
+      required: ['toWalletId', 'amount', 'reason', 'authorizedBy'],
+      properties: {
+        toWalletId: { type: 'string' },
+        amount: { type: 'number' },
+        reason: { type: 'string', enum: ['StarterLoan', 'Reward', 'Subsidy', 'Correction'] },
+        authorizedBy: { type: 'string', description: 'Agreement authorizing this mint' },
+      },
+    },
+    requiredPermissions: ['Treasury:mint'],
+    examples: [],
+    handler: async (intent: Intent, context: HandlerContext): Promise<IntentResult> => {
+      const startTime = Date.now();
+      const payload = intent.payload as {
+        toWalletId: string;
+        amount: number;
+        reason: 'StarterLoan' | 'Reward' | 'Subsidy' | 'Correction';
+        authorizedBy: string;
+      };
+
+      const amountSmallest = toSmallestUnit(payload.amount);
+
+      const eventPayload: CreditsMintedPayload = {
+        type: 'CreditsMinted',
+        amount: amountSmallest,
+        toWalletId: asEntityId(payload.toWalletId),
+        reason: payload.reason,
+        authorizedBy: asEntityId(payload.authorizedBy),
+      };
+
+      // Record on Treasury aggregate (special system entity)
+      const event = await context.eventStore.append({
+        type: 'CreditsMinted',
+        aggregateId: asEntityId('treasury'),
+        aggregateType: 'Asset',
+        aggregateVersion: 1, // TODO: get actual version
+        payload: eventPayload,
+        actor: intent.actor,
+        causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
+      });
+
+      return {
+        success: true,
+        outcome: {
+          type: 'Created',
+          entity: { amount: payload.amount, toWalletId: payload.toWalletId, reason: payload.reason },
+          id: event.id,
+        },
+        events: [{ id: event.id, type: event.type, sequence: event.sequence }],
+        affordances: [],
+        meta: {
+          processedAt: Date.now(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Disburse Loan - Issue a starter loan to a new agent
+  // -------------------------------------------------------------------------
+  {
+    name: 'disburse:loan',
+    description: 'Issue a starter loan to a new agent (creates credits and loan agreement)',
+    category: 'Agreement',
+    schema: {
+      type: 'object',
+      required: ['borrowerId', 'guarantorId', 'walletId', 'principal'],
+      properties: {
+        borrowerId: { type: 'string' },
+        guarantorId: { type: 'string' },
+        walletId: { type: 'string' },
+        principal: { type: 'number' },
+        interestRate: { type: 'number', default: 0.10 },
+        repaymentRate: { type: 'number', default: 0.20 },
+        gracePeriodDays: { type: 'number', default: 30 },
+      },
+    },
+    requiredPermissions: ['Loan:disburse'],
+    examples: [],
+    handler: async (intent: Intent, context: HandlerContext): Promise<IntentResult> => {
+      const startTime = Date.now();
+      const payload = intent.payload as {
+        borrowerId: string;
+        guarantorId: string;
+        walletId: string;
+        principal: number;
+        interestRate?: number;
+        repaymentRate?: number;
+        gracePeriodDays?: number;
+      };
+
+      const loanId = Ids.agreement();
+      const principalSmallest = toSmallestUnit(payload.principal);
+      const gracePeriodMs = (payload.gracePeriodDays || 30) * 24 * 60 * 60 * 1000;
+
+      const events: Array<{ id: EntityId; type: string; sequence: bigint }> = [];
+
+      // 1. Mint credits for the loan
+      const mintPayload: CreditsMintedPayload = {
+        type: 'CreditsMinted',
+        amount: principalSmallest,
+        toWalletId: asEntityId(payload.walletId),
+        reason: 'StarterLoan',
+        authorizedBy: loanId,
+      };
+
+      const mintEvent = await context.eventStore.append({
+        type: 'CreditsMinted',
+        aggregateId: asEntityId('treasury'),
+        aggregateType: 'Asset',
+        aggregateVersion: 1,
+        payload: mintPayload,
+        actor: intent.actor,
+        causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
+      });
+      events.push({ id: mintEvent.id, type: mintEvent.type, sequence: mintEvent.sequence });
+
+      // 2. Record loan disbursement
+      const loanPayload: LoanDisbursedPayload = {
+        type: 'LoanDisbursed',
+        loanId,
+        borrowerId: asEntityId(payload.borrowerId),
+        guarantorId: asEntityId(payload.guarantorId),
+        principal: principalSmallest,
+        interestRate: payload.interestRate || 0.10,
+        repaymentRate: payload.repaymentRate || 0.20,
+        gracePeriodEnds: Date.now() + gracePeriodMs,
+      };
+
+      const loanEvent = await context.eventStore.append({
+        type: 'LoanDisbursed',
+        aggregateId: loanId,
+        aggregateType: 'Agreement',
+        aggregateVersion: 1,
+        payload: loanPayload,
+        actor: intent.actor,
+        causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
+      });
+      events.push({ id: loanEvent.id, type: loanEvent.type, sequence: loanEvent.sequence });
+
+      return {
+        success: true,
+        outcome: {
+          type: 'Created',
+          entity: {
+            loanId,
+            borrowerId: payload.borrowerId,
+            principal: payload.principal,
+            walletId: payload.walletId,
+          },
+          id: loanId,
+        },
+        events,
+        affordances: [
+          { intent: 'repay:loan', description: 'Make a loan repayment', required: ['loanId', 'amount'] },
+        ],
+        meta: {
+          processedAt: Date.now(),
+          processingTime: Date.now() - startTime,
+        },
+      };
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Repay Loan - Make a payment towards a loan
+  // -------------------------------------------------------------------------
+  {
+    name: 'repay:loan',
+    description: 'Make a payment towards a loan',
+    category: 'Agreement',
+    schema: {
+      type: 'object',
+      required: ['loanId', 'fromWalletId', 'amount'],
+      properties: {
+        loanId: { type: 'string' },
+        fromWalletId: { type: 'string' },
+        amount: { type: 'number' },
+      },
+    },
+    requiredPermissions: ['Loan:repay'],
+    examples: [],
+    handler: async (intent: Intent, context: HandlerContext): Promise<IntentResult> => {
+      const startTime = Date.now();
+      const payload = intent.payload as {
+        loanId: string;
+        fromWalletId: string;
+        amount: number;
+      };
+
+      const amountSmallest = toSmallestUnit(payload.amount);
+
+      // TODO: Calculate interest vs principal split based on loan terms
+      // For now, assume 80% principal, 20% interest
+      const principalPortion = (amountSmallest * BigInt(80)) / BigInt(100);
+      const interestPortion = amountSmallest - principalPortion;
+
+      const eventPayload: LoanRepaymentMadePayload = {
+        type: 'LoanRepaymentMade',
+        loanId: asEntityId(payload.loanId),
+        amount: amountSmallest,
+        principalPortion,
+        interestPortion,
+        remainingBalance: BigInt(0), // TODO: calculate from loan state
+      };
+
+      const event = await context.eventStore.append({
+        type: 'LoanRepaymentMade',
+        aggregateId: asEntityId(payload.loanId),
+        aggregateType: 'Agreement',
+        aggregateVersion: 1, // TODO: get actual version
+        payload: eventPayload,
+        actor: intent.actor,
+        causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
+      });
+
+      return {
+        success: true,
+        outcome: {
+          type: 'Fulfilled',
+          obligation: 'loan-repayment',
         },
         events: [{ id: event.id, type: event.type, sequence: event.sequence }],
         affordances: [],
