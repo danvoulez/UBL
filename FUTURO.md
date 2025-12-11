@@ -168,7 +168,7 @@ O que já temos:
 2. **Tudo via Intents** - Nenhum bypass, tudo auditável
 3. **ABAC sempre** - Toda ação verifica permissões via agreements
 4. **Actor em tudo** - Nenhuma ação anônima
-5. **Container-aware** - Respeitar hierarquia de containers
+5. **Container-aware** - Respeitar hierarquia de containers. Se o que estás criando tem cara de container, NÃO crie uma coisa avulsa no código—crie um container
 6. **Sem migrations** - Schema evolui via eventos, não SQL
 
 ---
