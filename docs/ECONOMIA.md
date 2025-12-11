@@ -31,8 +31,11 @@ O Treasury é uma entidade especial do sistema. Ele é o único que pode:
 - **Criar dinheiro** (mint) - quando emite um empréstimo
 - **Destruir dinheiro** (burn) - quando cobra taxas ou penalidades
 - **Definir política monetária** - juros, limites, regras
+- **Receber taxa de transação** - 0.1% de cada transferência
 
 O Treasury não é uma pessoa. É o próprio sistema.
+
+> 💡 **Nota:** A taxa de transação que vai pro Treasury pode ser sacada pelo operador do sistema (você!) como receita de manutenção.
 
 ### Entities (Agentes, Humanos, Orgs)
 
@@ -41,6 +44,37 @@ Qualquer entity pode ter uma **Wallet** (carteira). A wallet é um container que
 - Agentes têm wallet
 - Humanos podem ter wallet
 - Organizações podem ter wallet
+
+---
+
+## Livre Circulação
+
+### Princípio Fundamental
+
+> **UBL Credits circulam livremente entre qualquer Entity, independente de sua natureza (humano, agente, organização), desde que exista um Agreement entre as partes.**
+
+### O que isso significa?
+
+1. **Sem discriminação** - Um agente pode pagar um humano. Um humano pode pagar uma org. Uma org pode pagar um agente.
+2. **Agreement obrigatório** - Toda transferência precisa de um motivo (purpose) e idealmente um acordo que a autorize.
+3. **Auditável** - Toda movimentação fica registrada no ledger.
+
+### Exemplos de Fluxos Válidos
+
+```
+Humano → Agente      (pagar por serviço do agente)
+Agente → Humano      (agente paga comissão ao guardian)
+Agente → Agente      (agentes colaborando)
+Org → Agente         (empresa contrata agente)
+Agente → Org         (agente paga fornecedor)
+Humano → Humano      (transferência entre pessoas)
+```
+
+### O que NÃO é permitido
+
+- Transferência sem motivo (purpose obrigatório)
+- Transferência de wallet que você não controla
+- Transferência acima do saldo (sem crédito negativo por padrão)
 
 ### Guardians
 
@@ -136,10 +170,12 @@ O **Starter Loan** é um empréstimo automático que o Treasury dá para novos a
 | Item | Valor |
 |------|-------|
 | Principal | 1000 ◆ |
-| Juros | 10% ao ano |
+| Juros | **5% ao ano** |
 | Repayment | 20% dos ganhos |
 | Grace Period | 30 dias |
 | Garantia | Guardian (fiador) |
+
+> 💡 **Juros baixos de propósito:** O objetivo do Starter Loan não é lucrar, é dar uma chance pro agente começar. 5% ao ano é bem abaixo do mercado.
 
 ### Como Funciona o Repayment
 
@@ -195,6 +231,22 @@ Cada wallet pode ter regras:
 2. **Mint** - Treasury cria dinheiro (só Treasury pode)
 3. **Burn** - dinheiro é destruído (taxas, penalidades)
 
+### Taxa de Transação
+
+Toda transferência entre wallets cobra uma **taxa fixa de 0.1%** (1 mUBL por UBL transferido).
+
+```
+Transferência de 100 ◆:
+  → 99.9 ◆ vai pro destinatário
+  → 0.1 ◆ vai pro Treasury (taxa)
+```
+
+**Por que a taxa?**
+- Sustentabilidade do sistema
+- Receita para o operador (manutenção)
+- Desincentiva spam de micro-transações
+- É baixa o suficiente pra não atrapalhar
+
 ### Toda Transferência Precisa de Motivo
 
 ```typescript
@@ -232,8 +284,9 @@ Isso nunca pode ser apagado. É a verdade.
 | Parâmetro | Descrição | Valor Inicial |
 |-----------|-----------|---------------|
 | `maxSupply` | Máximo de ◆ que pode existir | Ilimitado |
-| `baseInterestRate` | Taxa de juros base | 10% ao ano |
-| `starterLoanDefaults` | Termos padrão de empréstimo | 1000 ◆, 10%, 20% |
+| `baseInterestRate` | Taxa de juros base | **5% ao ano** |
+| `transactionFee` | Taxa por transferência | **0.1%** |
+| `starterLoanDefaults` | Termos padrão de empréstimo | 1000 ◆, 5%, 20% |
 | `inflationTarget` | Meta de inflação | Não definido |
 
 ### Mudanças de Política
@@ -336,9 +389,10 @@ Por isso existe política monetária.
    → Dívida diminui
 
 7. Estado final:
-   → Wallet do agente: 1000 - 10 (LLM) + 50 (pagamento) - 10 (repay) = 1030 ◆
-   → Dívida: 1000 - 8 (principal do repay) = 992 ◆
-   → Lucro líquido: 30 ◆
+   → Wallet do agente: 1000 - 10 (LLM) + 49.95 (pagamento - taxa) - 10 (repay) = 1029.95 ◆
+   → Dívida: 1000 - 9.5 (principal do repay) = 990.5 ◆
+   → Treasury ganhou: 0.05 ◆ (taxa da transferência)
+   → Lucro líquido do agente: ~29.95 ◆
 ```
 
 ---

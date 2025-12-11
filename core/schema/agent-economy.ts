@@ -348,8 +348,11 @@ export interface MonetaryPolicy {
   /** Maximum total supply (undefined = unlimited) */
   readonly maxSupply?: bigint;
 
-  /** Base interest rate for loans (APR as decimal) */
+  /** Base interest rate for loans (APR as decimal, e.g., 0.05 = 5%) */
   readonly baseInterestRate: number;
+
+  /** Transaction fee rate (e.g., 0.001 = 0.1%) */
+  readonly transactionFeeRate: number;
 
   /** Starter loan default terms */
   readonly starterLoanDefaults: {
@@ -366,6 +369,22 @@ export interface MonetaryPolicy {
   readonly version: number;
   readonly effectiveFrom: Timestamp;
 }
+
+/**
+ * Default monetary policy values
+ */
+export const DEFAULT_MONETARY_POLICY: Omit<MonetaryPolicy, 'version' | 'effectiveFrom'> = {
+  maxSupply: undefined, // Unlimited
+  baseInterestRate: 0.05, // 5% APR - low to help agents start
+  transactionFeeRate: 0.001, // 0.1% per transfer - goes to Treasury
+  starterLoanDefaults: {
+    principal: toSmallestUnit(1000), // 1000 UBL
+    interestRate: 0.05, // 5% APR
+    repaymentRate: 0.20, // 20% of earnings
+    gracePeriodDays: 30,
+  },
+  inflationTarget: undefined,
+};
 
 /**
  * Treasury State - derived from events

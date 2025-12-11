@@ -716,27 +716,58 @@ export const AGENT_ECONOMY_INTENTS: readonly IntentDefinition[] = [
         agreementId?: string;
       };
 
-      const amountSmallest = toSmallestUnit(payload.amount);
+      const TRANSACTION_FEE_RATE = 0.001; // 0.1% - goes to Treasury
+      const TREASURY_WALLET_ID = 'treasury-wallet';
 
-      const eventPayload: CreditsTransferredPayload = {
+      const grossAmount = toSmallestUnit(payload.amount);
+      const feeAmount = (grossAmount * BigInt(Math.round(TRANSACTION_FEE_RATE * 10000))) / BigInt(10000);
+      const netAmount = grossAmount - feeAmount;
+
+      const events: Array<{ id: EntityId; type: string; sequence: bigint }> = [];
+
+      // 1. Transfer net amount to recipient
+      const transferPayload: CreditsTransferredPayload = {
         type: 'CreditsTransferred',
-        amount: amountSmallest,
+        amount: netAmount,
         fromWalletId: asEntityId(payload.fromWalletId),
         toWalletId: asEntityId(payload.toWalletId),
         purpose: payload.purpose,
         agreementId: payload.agreementId ? asEntityId(payload.agreementId) : undefined,
       };
 
-      // Record transfer on source wallet
-      const event = await context.eventStore.append({
+      const transferEvent = await context.eventStore.append({
         type: 'CreditsTransferred',
         aggregateId: asEntityId(payload.fromWalletId),
         aggregateType: 'Asset',
         aggregateVersion: 1, // TODO: get actual version
-        payload: eventPayload,
+        payload: transferPayload,
         actor: intent.actor,
         causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
       });
+      events.push({ id: transferEvent.id, type: transferEvent.type, sequence: transferEvent.sequence });
+
+      // 2. Transfer fee to Treasury (if fee > 0)
+      if (feeAmount > BigInt(0)) {
+        const feePayload: CreditsTransferredPayload = {
+          type: 'CreditsTransferred',
+          amount: feeAmount,
+          fromWalletId: asEntityId(payload.fromWalletId),
+          toWalletId: asEntityId(TREASURY_WALLET_ID),
+          purpose: 'Transaction fee (0.1%)',
+          agreementId: undefined,
+        };
+
+        const feeEvent = await context.eventStore.append({
+          type: 'CreditsTransferred',
+          aggregateId: asEntityId(payload.fromWalletId),
+          aggregateType: 'Asset',
+          aggregateVersion: 2, // After the main transfer
+          payload: feePayload,
+          actor: intent.actor,
+          causation: { commandId: asEntityId(intent.idempotencyKey || Ids.command()) },
+        });
+        events.push({ id: feeEvent.id, type: feeEvent.type, sequence: feeEvent.sequence });
+      }
 
       return {
         success: true,
@@ -744,8 +775,10 @@ export const AGENT_ECONOMY_INTENTS: readonly IntentDefinition[] = [
           type: 'Transferred',
           asset: asEntityId(payload.fromWalletId),
           to: asEntityId(payload.toWalletId),
+          netAmount: Number(netAmount) / 1000, // Convert back to UBL
+          feeAmount: Number(feeAmount) / 1000,
         },
-        events: [{ id: event.id, type: event.type, sequence: event.sequence }],
+        events,
         affordances: [],
         meta: {
           processedAt: Date.now(),
