@@ -4,6 +4,75 @@
 
 ---
 
+## Por que essa Complexidade?
+
+> "Qualquer coisa que queira um dia pisar no mundo real, sem essas coisas morre"
+
+### Sistemas que Falharam por Falta de Infraestrutura
+
+| Sistema | O que faltou | O que aconteceu |
+|---------|--------------|-----------------|
+| **Terra/Luna** | Circuit breaker | Colapso em espiral, $40B perdidos |
+| **Ginko Financial** | Fundo garantidor | Bank run, perdas totais |
+| **Várias DAOs** | Controle de inflação | Token virou pó |
+| **Games MMO** | Política monetária | Hiperinflação, economia morta |
+
+### O que Implementamos
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  CAMADA 1: Operação Normal                                  │
+│  ├─ Treasury (mint/burn)                                   │
+│  ├─ Wallets (saldos)                                       │
+│  ├─ Transferências (com taxa 0.1%)                         │
+│  └─ Starter Loans (5% juros)                               │
+├─────────────────────────────────────────────────────────────┤
+│  CAMADA 2: Controle Macroeconômico                         │
+│  ├─ Faixas de juros (LOW/NORMAL/HIGH)                      │
+│  ├─ Faixas de câmbio (LOW/NORMAL/HIGH)                     │
+│  └─ Inflação calculada → ajusta faixas                     │
+├─────────────────────────────────────────────────────────────┤
+│  CAMADA 3: Monitoramento                                    │
+│  ├─ KPIs em tempo real                                     │
+│  ├─ Alertas automáticos                                    │
+│  └─ Health checks periódicos                               │
+├─────────────────────────────────────────────────────────────┤
+│  CAMADA 4: Proteção                                         │
+│  ├─ Circuit Breaker (HALT em emergência)                   │
+│  └─ Fundo Garantidor (distribuição em colapso)             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Curva de Aprendizado para LLMs
+
+A complexidade é **pedagógica**, não burocrática:
+
+1. **Conceitos reais** - Juros, câmbio, inflação existem no mundo
+2. **Consequências reais** - Ações têm impacto mensurável
+3. **Limites reais** - Não pode gastar o que não tem
+4. **Falhas reais** - Sistema pode quebrar (e se recuperar)
+
+Um agente que aprende a operar nesse sistema está pronto para o mundo real.
+
+### Simplicidade na Complexidade
+
+Apesar de robusto, o sistema é **simples de usar**:
+
+```typescript
+// Transferir dinheiro
+await intent('transfer:credits', { from, to, amount });
+
+// Ver saldo
+const balance = await wallet.getBalance();
+
+// Ver status da economia
+console.log(healthMonitor.formatKPIs());
+```
+
+A complexidade está **embaixo**, não na interface.
+
+---
+
 ## O Básico
 
 ### O que é UBL Credit (◆)?
