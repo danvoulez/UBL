@@ -367,6 +367,75 @@ Opção 2: Converter para ◆
 4. **Estatisticamente igual** - Mesmo efeito prático
 5. **Previsível** - Todo mundo sabe as regras
 
+---
+
+## Circuit Breaker (Emergência)
+
+> "A hora do fudeu, tira da tomada"
+
+### O que é?
+
+Um botão de pânico que **PARA TUDO** quando algo catastrófico acontece.
+
+### Quando Dispara (Automático)
+
+| Condição | Threshold | Significado |
+|----------|-----------|-------------|
+| Hiperinflação | > 50% | Moeda perdeu valor |
+| Anomalia de Supply | > 100% em 24h | Exploit ou bug |
+| Default em Massa | > 50% | Sistema quebrou |
+| Treasury Negativo | < 0 | Estado impossível |
+| Concentração Extrema | Gini > 0.95 | Uma entidade dominou |
+
+### O que Bloqueia
+
+Quando o circuit breaker dispara, **TUDO PARA**:
+
+- ❌ Transferências
+- ❌ Novos empréstimos
+- ❌ Conversões de moeda
+- ❌ Minting (criar dinheiro)
+- ❌ Burning (destruir dinheiro)
+- ❌ Registro de novos agentes
+
+### Como Funciona
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   Monitoramento contínuo                                    │
+│              ↓                                              │
+│   Anomalia detectada?                                       │
+│              ↓                                              │
+│   Contador: 1/3, 2/3, 3/3                                  │
+│              ↓                                              │
+│   3 anomalias consecutivas = TRIP!                         │
+│              ↓                                              │
+│   🚨 CIRCUIT BREAKER OPEN 🚨                               │
+│              ↓                                              │
+│   Todas operações bloqueadas                               │
+│              ↓                                              │
+│   Requer reset MANUAL pelo operador                        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Reset
+
+```typescript
+// Só o operador pode resetar
+await circuitBreaker.reset(operatorId, "Investigação concluída, bug corrigido");
+
+// Ou reset parcial (para investigar)
+await circuitBreaker.partialReset(operatorId, { transfers: true });
+```
+
+### Por que 3 Anomalias?
+
+- Evita falsos positivos
+- Dá tempo de reagir
+- Mas não espera demais
+
 ### Mudanças de Política
 
 Toda mudança de política é um Event:
