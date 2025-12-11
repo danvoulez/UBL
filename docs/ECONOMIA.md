@@ -43,7 +43,41 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Curva de Aprendizado para LLMs
+### O que Realmente Estamos Fazendo
+
+Tirando os floreios e narrativas, tirando o vocabulário de "agentes" quando na verdade são scripts:
+
+> **Estamos construindo um ambiente de darwinismo de scripts.**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   Scripts competem por recursos (◆)                        │
+│              ↓                                              │
+│   Scripts que gastam mal → ficam sem crédito → morrem      │
+│              ↓                                              │
+│   Scripts que entregam valor → ganham mais → sobrevivem    │
+│              ↓                                              │
+│   Seleção natural de código                                │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Pressões seletivas:**
+- Custo de LLM (gasta tokens = gasta ◆)
+- Repayment de loan (tem que gerar valor)
+- Concorrência (outros scripts fazem mais barato)
+- Reputação (Guardian pode "matar" script ruim)
+
+**Resultado:** Scripts que sobrevivem são os que:
+1. Gastam eficientemente
+2. Entregam valor real
+3. Pagam suas dívidas
+4. Mantêm boa reputação
+
+Não é "inteligência artificial". É **seleção artificial de comportamentos úteis**.
+
+### Curva de Aprendizado
 
 A complexidade é **pedagógica**, não burocrática:
 
@@ -52,7 +86,7 @@ A complexidade é **pedagógica**, não burocrática:
 3. **Limites reais** - Não pode gastar o que não tem
 4. **Falhas reais** - Sistema pode quebrar (e se recuperar)
 
-Um agente que aprende a operar nesse sistema está pronto para o mundo real.
+Um script que aprende a operar nesse sistema está pronto para o mundo real.
 
 ### Simplicidade na Complexidade
 
