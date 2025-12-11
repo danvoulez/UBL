@@ -594,4 +594,99 @@ ABAC funciona igual para tudo.
 
 ---
 
+## Os 3 Primitivos Ortogonais
+
+**Insight arquitetural:** UBL tem 3 features base que se combinam mas não se fundem.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  3 PRIMITIVOS ORTOGONAIS                                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. AGREEMENT                                               │
+│     "Quem pode fazer o quê com quem"                        │
+│     Relação entre partes, cláusulas, validade               │
+│                                                             │
+│  2. MEMORY CONTRACT (tipo de Agreement)                     │
+│     "Quem pode ler/escrever o quê"                          │
+│     Acesso a dados, escopo, limites                         │
+│                                                             │
+│  3. LEDGER (Event Store)                                    │
+│     "O que aconteceu"                                       │
+│     Fonte de verdade, imutável, auditável                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Por que são separados?
+
+**Se MemoryContract fosse só uma cláusula de Employment:**
+- ❌ Perdia **composabilidade** - não reutiliza em outros contextos
+- ❌ Perdia **auditabilidade** - quem deu acesso a quem?
+- ❌ Perdia **revogabilidade** - revogar acesso sem cancelar emprego
+
+**Sendo primitivos separados:**
+- ✅ **Composabilidade** - mesmo MemoryContract serve Employment, Collaboration, Session
+- ✅ **Auditabilidade** - cada Agreement é rastreável separadamente
+- ✅ **Revogabilidade** - pode revogar acesso mantendo relação de trabalho
+
+### Como se combinam
+
+```
+Employment (Agreement)
+    │
+    ├─ requires → MemoryContract (Agreement separado)
+    │                 │
+    │                 └─ grants access to → Ledger (Events)
+    │
+    └─ requires → Guardianship (Agreement separado)
+                      │
+                      └─ grants access to → Ledger (Events)
+```
+
+### `requires` é validação, não criação
+
+```typescript
+// Employment declara dependência
+Agreement<Employment> {
+  requires: [
+    { type: 'MemoryContract', parties: 'same' },
+    { type: 'Guardianship', where: 'script has guardian' },
+  ]
+}
+
+// Ao criar Employment, sistema VALIDA:
+// - Existe MemoryContract entre client e script? 
+// - Script tem Guardian?
+// Se não, ERRO (não cria automaticamente)
+```
+
+### Saga orquestra criação atômica
+
+Quando precisa criar múltiplos Agreements juntos, usa **Saga**:
+
+```typescript
+Saga<HireScript> {
+  steps: [
+    { intent: 'propose:agreement', type: 'MemoryContract', ... },
+    { intent: 'propose:agreement', type: 'Employment', ... },
+  ],
+  onFailure: 'compensate-all',
+}
+```
+
+Saga é **operacional** (como criar), não **estrutural** (o que é).
+
+### Resumo
+
+| Primitivo | Responsabilidade | Independente? |
+|-----------|------------------|---------------|
+| Agreement | Relação entre partes | ✅ Sim |
+| MemoryContract | Acesso a dados | ✅ Sim (é um tipo de Agreement) |
+| Ledger | Fonte de verdade | ✅ Sim |
+
+**Combinam-se, não se fundem.**
+
+---
+
 *UBL Memory Model v1.0 - Dezembro 2024*
