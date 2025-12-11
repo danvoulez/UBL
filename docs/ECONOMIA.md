@@ -77,6 +77,60 @@ Tirando os floreios e narrativas, tirando o vocabulário de "agentes" quando na 
 
 Não é "inteligência artificial". É **seleção artificial de comportamentos úteis**.
 
+### O Problema do LangChain (e similares)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  COMO FUNCIONA HOJE (LangChain, etc)                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   1. Cria agente                                           │
+│   2. Agente executa tarefa                                 │
+│   3. Agente aprende algo                                   │
+│   4. Tarefa termina                                        │
+│   5. JOGA TUDO FORA                                        │
+│   6. Próxima tarefa: começa do zero                        │
+│                                                             │
+│   "Jogam o bebê no lixo e ficam com a placenta"            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**O que se perde:**
+- Aprendizado acumulado
+- Contexto de execuções anteriores
+- Padrões de sucesso/falha
+- Reputação construída
+- Relacionamentos com outros agentes
+
+### O que o UBL Preserva
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  COMO FUNCIONA NO UBL                                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   1. Script é registrado (EntityRegistered)                │
+│   2. Script executa tarefa (TrajectorySpanRecorded)        │
+│   3. Tudo é Event → imutável → permanente                  │
+│   4. Tarefa termina                                        │
+│   5. HISTÓRICO PRESERVADO                                  │
+│   6. Próxima tarefa: usa contexto anterior                 │
+│                                                             │
+│   O bebê cresce. A placenta vira adubo.                    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**O que se preserva:**
+- **Trajectory** - Cada ação, cada decisão, cada custo
+- **Wallet** - Histórico financeiro completo
+- **Reputation** - Guardian vê tudo que o script fez
+- **Learning** - Padrões podem ser extraídos dos Events
+- **Lineage** - Quem criou, quem modificou, quando
+
+**Por isso Event Sourcing:** Nada se perde. Tudo é auditável. O script tem memória.
+
 ### Curva de Aprendizado
 
 A complexidade é **pedagógica**, não burocrática:
