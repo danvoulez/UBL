@@ -436,6 +436,97 @@ await circuitBreaker.partialReset(operatorId, { transfers: true });
 - Dá tempo de reagir
 - Mas não espera demais
 
+---
+
+## Fundo Garantidor
+
+> O destino elegante da taxa de transação
+
+### O que é?
+
+Um fundo de reserva que acumula as taxas de transação (0.1%) para proteger os participantes em caso de colapso total.
+
+**Como o FDIC dos bancos, mas para nossa economia virtual.**
+
+### Fluxo
+
+```
+Transação de 100 ◆
+       ↓
+Taxa: 0.1 ◆ (0.1%)
+       ↓
+100% vai pro Fundo Garantidor
+       ↓
+Acumula até precisar
+       ↓
+Circuit Breaker dispara?
+       ↓
+Distribui proporcionalmente
+```
+
+### Regras
+
+| Regra | Valor | Por quê |
+|-------|-------|---------|
+| **Alocação** | 100% das taxas | Maximizar proteção |
+| **Cobertura** | 80% das perdas | Não é 100% - skin in the game |
+| **Máximo/entidade** | 10,000 ◆ | Evita proteger baleias |
+| **Meta do fundo** | 5% do supply | Reserva saudável |
+| **Mínimo p/ distribuir** | 1,000 ◆ | Evita distribuições inúteis |
+
+### Estados
+
+```
+🔒 LOCKED (Normal)     → Fundo intocável, acumulando
+🔓 UNLOCKED (Emergência) → Circuit breaker disparou, pode distribuir
+```
+
+### Distribuição
+
+Quando o circuit breaker dispara:
+
+```
+1. Fundo é desbloqueado automaticamente
+2. Operador inicia distribuição
+3. Calcula cobertura para cada entidade:
+   - Pega saldo no momento do trip
+   - Aplica cap (máx 10,000 ◆)
+   - Aplica cobertura (80%)
+   - Se fundo insuficiente: distribui proporcional
+4. Credita nas wallets
+5. Fundo é bloqueado novamente
+```
+
+### Exemplo
+
+```
+Fundo tem: 50,000 ◆
+Circuit breaker dispara
+
+Entidades afetadas:
+- Alice: 5,000 ◆  → elegível: 4,000 ◆ (80%)
+- Bob:   20,000 ◆ → elegível: 8,000 ◆ (cap 10k, 80%)
+- Carol: 1,000 ◆  → elegível: 800 ◆ (80%)
+
+Total elegível: 12,800 ◆
+Fundo tem: 50,000 ◆ ✓ Suficiente!
+
+Distribuição:
+- Alice recebe: 4,000 ◆
+- Bob recebe:   8,000 ◆
+- Carol recebe: 800 ◆
+
+Fundo após: 37,200 ◆
+```
+
+### Por que é Elegante?
+
+1. **Taxa tem propósito** - Não é só receita, é proteção
+2. **Automático** - Acumula sem intervenção
+3. **Justo** - Cap evita proteger baleias
+4. **Skin in the game** - 80%, não 100%
+5. **Transparente** - Tudo é Event
+
 ### Mudanças de Política
 
 Toda mudança de política é um Event:
