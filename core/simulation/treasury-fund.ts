@@ -174,18 +174,20 @@ export class TreasuryStabilizationFund {
       : 0;
     
     // Count scripts in distress (negative balance or high debt)
+    // SPRINT 7: More sensitive distress detection
     const distressedScripts = activeScripts.filter(s => 
-      Number(s.state.walletBalance) < 100 || 
-      Number(s.state.loanOutstanding) > Number(s.state.walletBalance) * 2
+      Number(s.state.walletBalance) < 200 || 
+      Number(s.state.loanOutstanding) > Number(s.state.walletBalance) * 1.5
     ).length;
     const distressRate = distressedScripts / Math.max(1, activeScripts.length);
     
     // Assess based on multiple factors
     let score = 0;
     
-    // Sentiment factor
+    // Sentiment factor - SPRINT 7: More sensitive
     if (market.sentiment < this.config.crisisSentimentThreshold) {
       score += 2;
+      if (market.sentiment < -0.3) score += 1;
       if (market.sentiment < -0.5) score += 1;
       if (market.sentiment < -0.7) score += 1;
     }
@@ -193,26 +195,35 @@ export class TreasuryStabilizationFund {
     // Unemployment factor
     if (market.unemploymentRate > this.config.crisisUnemploymentThreshold) {
       score += 1;
-      if (market.unemploymentRate > 0.12) score += 1;
+      if (market.unemploymentRate > 0.10) score += 1;
+      if (market.unemploymentRate > 0.15) score += 1;
     }
     
-    // Survival rate factor
-    if (survivalRate < 0.7) score += 1;
-    if (survivalRate < 0.5) score += 2;
-    if (survivalRate < 0.3) score += 2;
+    // Survival rate factor - SPRINT 7: Earlier intervention
+    if (survivalRate < 0.8) score += 1;
+    if (survivalRate < 0.6) score += 2;
+    if (survivalRate < 0.4) score += 2;
+    if (survivalRate < 0.25) score += 2;
     
-    // Distress rate factor
-    if (distressRate > 0.3) score += 1;
-    if (distressRate > 0.5) score += 2;
+    // Distress rate factor - SPRINT 7: More sensitive
+    if (distressRate > 0.2) score += 1;
+    if (distressRate > 0.4) score += 2;
+    if (distressRate > 0.6) score += 2;
     
-    // Average balance factor
-    if (avgBalance < 200) score += 1;
+    // Average balance factor - SPRINT 7: Higher thresholds
+    if (avgBalance < 300) score += 1;
+    if (avgBalance < 150) score += 1;
     if (avgBalance < 50) score += 2;
     
-    // Map score to crisis level
-    if (score >= 8) return 'Critical';
-    if (score >= 5) return 'Severe';
-    if (score >= 3) return 'Moderate';
+    // SPRINT 7: Contraction phase bonus (preemptive intervention)
+    if (market.cyclePhase === 'Contraction') {
+      score += 1;
+    }
+    
+    // Map score to crisis level - SPRINT 7: Lower thresholds
+    if (score >= 7) return 'Critical';
+    if (score >= 4) return 'Severe';
+    if (score >= 2) return 'Moderate';
     if (score >= 1) return 'Mild';
     return 'None';
   }
@@ -253,37 +264,37 @@ export class TreasuryStabilizationFund {
     
     switch (crisisLevel) {
       case 'Critical':
-        // Emergency UBI to everyone
+        // SPRINT 7: Emergency UBI to everyone with higher amount
         interventionType = 'EmergencyUBI';
-        amountPerScript = this.config.maxEmergencyDistribution;
+        amountPerScript = this.config.maxEmergencyDistribution * 3n / 2n; // 1.5x
         targetScripts = activeScripts;
         break;
         
       case 'Severe':
-        // Targeted bailout + loan forgiveness
+        // SPRINT 7: Targeted bailout with wider net
         interventionType = 'TargetedBailout';
-        amountPerScript = this.config.maxEmergencyDistribution * 3n / 4n;
+        amountPerScript = this.config.maxEmergencyDistribution;
         targetScripts = activeScripts.filter(s => 
-          Number(s.state.walletBalance) < 200 ||
-          Number(s.state.loanOutstanding) > 500
+          Number(s.state.walletBalance) < 400 ||
+          Number(s.state.loanOutstanding) > 300
         );
         break;
         
       case 'Moderate':
-        // Help only distressed scripts
+        // SPRINT 7: Help more scripts earlier
         interventionType = 'TargetedBailout';
-        amountPerScript = this.config.maxEmergencyDistribution / 2n;
+        amountPerScript = this.config.maxEmergencyDistribution * 3n / 4n;
         targetScripts = activeScripts.filter(s => 
-          Number(s.state.walletBalance) < 100
+          Number(s.state.walletBalance) < 250
         );
         break;
         
       case 'Mild':
-        // Small boost to struggling scripts
+        // SPRINT 7: Preemptive support
         interventionType = 'TargetedBailout';
-        amountPerScript = this.config.maxEmergencyDistribution / 4n;
+        amountPerScript = this.config.maxEmergencyDistribution / 2n;
         targetScripts = activeScripts.filter(s => 
-          Number(s.state.walletBalance) < 50
+          Number(s.state.walletBalance) < 150
         );
         break;
     }
