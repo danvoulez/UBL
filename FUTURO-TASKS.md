@@ -727,12 +727,19 @@
 **2.2 Transactions** (~4h)
 - [ ] 🔴 IntentTransaction interface with compensation steps
 - [ ] 🔴 Atomic event append for transaction commits
+- [ ] 🔴 Correlation ID em eventos relacionados (audit trail)
 
 **2.3 Testes Restantes** (~3h)
 - [ ] 🔴 `tests/business/agent-economy/loans.test.ts`
 - [ ] 🔴 `tests/business/agent-economy/trajectory.test.ts`
 - [ ] 🔴 `tests/business/perception/watcher-lifecycle.test.ts`
 - [ ] 🔴 `tests/business/perception/shadow-graph.test.ts`
+
+**2.4 Economic Gatekeeper** (~3h) 🆕
+> Separação de concerns: Physics (Container) vs Policy (Economy)
+- [ ] 🔴 `core/economy/gatekeeper.ts` - Middleware para transfers
+- [ ] 🔴 Interface `ICircuitBreaker` e `ITreasury` (loose coupling)
+- [ ] 🔴 `assessTransfer()` - Calcula fees antes de executar
 
 ---
 
@@ -769,6 +776,12 @@
 - [ ] 🔴 `core/governance/three-branch.ts`
 - [ ] 🔴 Cross-realm operations (UIS-1.0)
 
+**4.5 Session Materialization** (~4h) 🆕
+> Sessions como Agreements no ledger (compliance/audit)
+- [ ] 🔴 `SESSION_TYPE` em `agreement-types.ts`
+- [ ] 🔴 Sessions persistidas no Event Store
+- [ ] 🔴 "Right to Forget" via Agreement termination
+
 ---
 
 ### 🏁 FASE FINAL: POLISH
@@ -793,3 +806,28 @@
 - [ ] 🔴 Zero erros TypeScript
 - [ ] 🔴 Cobertura de testes > 70%
 - [ ] 🔴 Documentação completa
+
+---
+
+## 📊 Análise de Riscos (Gemini Review)
+
+> Baseado em review externa do Google Gemini 3.0 (Dec 2025)
+
+### Riscos Identificados e Mitigações
+
+| Risco | Severidade | Mitigação | Status |
+|-------|------------|-----------|--------|
+| **Read Model Bottleneck** | Alta | Snapshots + Projections (FASE 3) | 🟡 Planejado |
+| **Physics Confusion Attack** | Crítica | `physics-validation.ts` | ✅ Implementado |
+| **Event Replay Attack** | Crítica | `replay-prevention.ts` | ✅ Implementado |
+| **Hash Chain Tampering** | Crítica | `hash-chain.ts` | ✅ Implementado |
+| **Economic Ghost** | Alta | Economic Gatekeeper (FASE 2.4) | 🟡 Planejado |
+| **Memory Contract Bluff** | Média | Session Materialization (FASE 4.5) | 🟡 Planejado |
+| **Shadow Privacy Leak** | Média | ABAC + Policies existentes | ✅ Coberto |
+
+### Validações Externas
+
+- ✅ **Arquitetura validada** - "One of the most philosophically coherent systems"
+- ✅ **Simulação econômica** - "Your biggest competitive advantage"
+- ✅ **ABAC** - "The correct model for autonomous agents"
+- ✅ **Código Pedagógico** - "Prompt-engineering the codebase itself"
