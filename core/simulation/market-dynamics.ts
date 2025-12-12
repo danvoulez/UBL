@@ -70,14 +70,77 @@ const DEFAULT_CYCLE_CONFIG: CycleConfig = {
 // MARKET SIMULATOR
 // =============================================================================
 
+// =============================================================================
+// CIRCUIT BREAKER
+// =============================================================================
+
+export interface CircuitBreakerState {
+  isTripped: boolean;
+  tripReason: string | null;
+  tripDay: number | null;
+  cooldownUntil: number | null;
+  tripCount: number;
+}
+
+export interface CircuitBreakerConfig {
+  /** Demand drop threshold to trigger (e.g., 0.3 = 30% drop) */
+  demandDropThreshold: number;
+  /** Sentiment threshold to trigger (e.g., -0.8) */
+  sentimentThreshold: number;
+  /** Cooldown period in days after trip */
+  cooldownDays: number;
+  /** Whether circuit breaker is enabled */
+  enabled: boolean;
+}
+
+const DEFAULT_CIRCUIT_BREAKER_CONFIG: CircuitBreakerConfig = {
+  demandDropThreshold: 0.4,   // 40% demand drop triggers
+  sentimentThreshold: -0.7,   // Panic level triggers
+  cooldownDays: 7,            // 1 week cooldown
+  enabled: true,
+};
+
+// =============================================================================
+// ONGOING EFFECTS
+// =============================================================================
+
+export interface OngoingEffect {
+  demandMultiplier?: number;
+  supplyMultiplier?: number;
+  sentimentBoost?: number;
+  moodBoost?: number;
+  panicMode?: boolean;
+  expiresAtDay?: number;
+}
+
+// =============================================================================
+// MARKET SIMULATOR
+// =============================================================================
+
 export class MarketDynamics {
   private state: MarketState;
   private config: CycleConfig;
   private history: MarketSnapshot[] = [];
   
-  constructor(config: Partial<CycleConfig> = {}) {
+  // SPRINT 4: Circuit Breaker
+  private circuitBreaker: CircuitBreakerState;
+  private cbConfig: CircuitBreakerConfig;
+  private previousDemand: number = 1.0;
+  
+  // SPRINT 4: Ongoing Effects from chaos events
+  private ongoingEffects: OngoingEffect[] = [];
+  
+  constructor(config: Partial<CycleConfig> = {}, cbConfig: Partial<CircuitBreakerConfig> = {}) {
     this.config = { ...DEFAULT_CYCLE_CONFIG, ...config };
+    this.cbConfig = { ...DEFAULT_CIRCUIT_BREAKER_CONFIG, ...cbConfig };
     this.state = this.createInitialState();
+    this.circuitBreaker = {
+      isTripped: false,
+      tripReason: null,
+      tripDay: null,
+      cooldownUntil: null,
+      tripCount: 0,
+    };
   }
   
   private createInitialState(): MarketState {
@@ -101,11 +164,28 @@ export class MarketDynamics {
   processTick(tick: SimulationTick): MarketState {
     const day = tick.simulatedDay;
     
+    // SPRINT 4: Check circuit breaker cooldown
+    if (this.circuitBreaker.isTripped) {
+      if (this.circuitBreaker.cooldownUntil && day >= this.circuitBreaker.cooldownUntil) {
+        this.resetCircuitBreaker();
+      } else {
+        // Market is frozen - minimal changes
+        this.state.sentiment += 0.01; // Slow recovery
+        return { ...this.state };
+      }
+    }
+    
+    // Store previous demand for circuit breaker check
+    this.previousDemand = this.state.demand;
+    
     // Update cycle phase
     this.updateCyclePhase(day);
     
     // Apply seasonal effects
     this.applySeasonalEffects(day);
+    
+    // SPRINT 4: Apply ongoing effects from chaos events
+    this.applyOngoingEffects(day);
     
     // Update supply/demand
     this.updateSupplyDemand();
@@ -119,6 +199,9 @@ export class MarketDynamics {
     // Apply random shocks
     this.applyRandomShocks();
     
+    // SPRINT 4: Check circuit breaker conditions
+    this.checkCircuitBreaker(day);
+    
     // Record history
     if (day % 7 === 0) { // Weekly snapshots
       this.history.push({
@@ -128,6 +211,108 @@ export class MarketDynamics {
     }
     
     return { ...this.state };
+  }
+  
+  // ---------------------------------------------------------------------------
+  // SPRINT 4: CIRCUIT BREAKER
+  // ---------------------------------------------------------------------------
+  
+  private checkCircuitBreaker(day: number): void {
+    if (!this.cbConfig.enabled) return;
+    
+    // Check demand drop
+    const demandDrop = (this.previousDemand - this.state.demand) / this.previousDemand;
+    if (demandDrop > this.cbConfig.demandDropThreshold) {
+      this.tripCircuitBreaker(day, `Demand dropped ${(demandDrop * 100).toFixed(1)}%`);
+      return;
+    }
+    
+    // Check sentiment panic
+    if (this.state.sentiment < this.cbConfig.sentimentThreshold) {
+      this.tripCircuitBreaker(day, `Sentiment at panic level: ${this.state.sentiment.toFixed(2)}`);
+      return;
+    }
+  }
+  
+  private tripCircuitBreaker(day: number, reason: string): void {
+    this.circuitBreaker = {
+      isTripped: true,
+      tripReason: reason,
+      tripDay: day,
+      cooldownUntil: day + this.cbConfig.cooldownDays,
+      tripCount: this.circuitBreaker.tripCount + 1,
+    };
+    
+    console.log(`🛑 CIRCUIT BREAKER TRIPPED: ${reason}`);
+    console.log(`   Trading halted until day ${this.circuitBreaker.cooldownUntil}`);
+    
+    // Stabilization effect: prevent further decline
+    this.state.demand = Math.max(0.5, this.state.demand);
+    this.state.sentiment = Math.max(-0.5, this.state.sentiment);
+  }
+  
+  private resetCircuitBreaker(): void {
+    console.log(`✅ CIRCUIT BREAKER RESET after ${this.cbConfig.cooldownDays} days`);
+    this.circuitBreaker.isTripped = false;
+    this.circuitBreaker.tripReason = null;
+    this.circuitBreaker.tripDay = null;
+    this.circuitBreaker.cooldownUntil = null;
+  }
+  
+  getCircuitBreakerState(): CircuitBreakerState {
+    return { ...this.circuitBreaker };
+  }
+  
+  // ---------------------------------------------------------------------------
+  // SPRINT 4: ONGOING EFFECTS
+  // ---------------------------------------------------------------------------
+  
+  addOngoingEffect(effect: OngoingEffect, durationDays: number, currentDay: number): void {
+    this.ongoingEffects.push({
+      ...effect,
+      expiresAtDay: currentDay + durationDays,
+    });
+    
+    const effectDesc = [];
+    if (effect.demandMultiplier) effectDesc.push(`demand x${effect.demandMultiplier}`);
+    if (effect.sentimentBoost) effectDesc.push(`sentiment +${effect.sentimentBoost}`);
+    if (effect.panicMode) effectDesc.push('PANIC MODE');
+    
+    console.log(`📊 Ongoing effect added: ${effectDesc.join(', ')} for ${durationDays} days`);
+  }
+  
+  private applyOngoingEffects(day: number): void {
+    // Remove expired effects
+    this.ongoingEffects = this.ongoingEffects.filter(e => 
+      !e.expiresAtDay || e.expiresAtDay > day
+    );
+    
+    // Apply active effects
+    for (const effect of this.ongoingEffects) {
+      if (effect.demandMultiplier) {
+        // Gradual application (not instant)
+        const targetDemand = this.state.demand * effect.demandMultiplier;
+        this.state.demand += (targetDemand - this.state.demand) * 0.1;
+      }
+      
+      if (effect.supplyMultiplier) {
+        const targetSupply = this.state.supply * effect.supplyMultiplier;
+        this.state.supply += (targetSupply - this.state.supply) * 0.1;
+      }
+      
+      if (effect.sentimentBoost) {
+        this.state.sentiment += effect.sentimentBoost * 0.05;
+        this.state.sentiment = Math.max(-1, Math.min(1, this.state.sentiment));
+      }
+      
+      if (effect.panicMode) {
+        this.state.sentiment = Math.min(this.state.sentiment, -0.5);
+      }
+    }
+  }
+  
+  getActiveEffectsCount(): number {
+    return this.ongoingEffects.length;
   }
   
   // ---------------------------------------------------------------------------

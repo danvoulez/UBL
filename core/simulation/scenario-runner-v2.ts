@@ -389,11 +389,26 @@ export class EnhancedScenarioRunner {
     const effects = await this.chaos.processTick(tick, this.population);
     this.chaosEffects.push(...effects);
     
-    // Apply chaos to market
+    // SPRINT 4: Apply chaos effects to market (including ongoing effects)
     for (const effect of effects) {
+      // Immediate shocks
       if (effect.type === 'MarketCrash') {
         this.market.applyShock('demand', -0.4);
         this.market.applyShock('sentiment', -0.5);
+      }
+      
+      // SPRINT 4: Process ongoing effects from chaos events
+      if (effect.ongoingEffect) {
+        const duration = this.chaos.getEventDuration(effect.type) || 30;
+        this.market.addOngoingEffect(
+          {
+            demandMultiplier: effect.ongoingEffect.demandMultiplier as number | undefined,
+            sentimentBoost: effect.ongoingEffect.moodBoost as number | undefined,
+            panicMode: effect.ongoingEffect.panicMode as boolean | undefined,
+          },
+          duration,
+          tick.simulatedDay
+        );
       }
     }
     

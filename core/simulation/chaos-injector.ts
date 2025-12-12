@@ -735,6 +735,13 @@ export class ChaosInjector {
     if (severities.includes('Medium')) return 'Medium';
     return 'Low';
   }
+  
+  /** SPRINT 4: Get event duration from CHAOS_SCENARIOS */
+  getEventDuration(eventType: ChaosEventType): number | undefined {
+    const scenarios = Object.values(CHAOS_SCENARIOS);
+    const scenario = scenarios.find(s => s.type === eventType);
+    return scenario?.duration;
+  }
 }
 
 // =============================================================================
