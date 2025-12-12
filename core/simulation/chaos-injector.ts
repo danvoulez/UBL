@@ -244,6 +244,109 @@ export const CHAOS_SCENARIOS = {
       inflationRisk: 0.1,
     },
   },
+  
+  // ===========================================================================
+  // TIER 3: EXISTENTIAL SCENARIOS
+  // ===========================================================================
+  
+  /** AGI Singularity - superintelligent AI emerges */
+  AGI_SINGULARITY: {
+    type: 'ModelRelease' as const,
+    severity: 'Critical' as const,
+    duration: 365,
+    params: {
+      obsolescenceRate: 0.99,        // 99% of scripts become obsolete
+      adaptationWindow: 1,           // Only 1 day to adapt
+      skillDepreciation: 0.95,       // Skills almost worthless
+      humanOversightCollapse: true,  // Guardians can't keep up
+      economicRestructuring: true,   // Entire economy must pivot
+      newParadigm: 'post-scarcity',  // Economy transforms
+    },
+  },
+  
+  /** Deflation trap - prices spiral downward */
+  DEFLATION_TRAP: {
+    type: 'MarketCrash' as const,
+    severity: 'Critical' as const,
+    duration: 730, // 2 years
+    params: {
+      demandDrop: 0.4,
+      recoveryRate: -0.01,           // Negative! Gets worse
+      priceDeflation: 0.02,          // 2% per month
+      hoarding: true,                // Everyone holds credits
+      investmentFreeze: true,        // No new projects
+      debtDeflation: true,           // Real debt increases
+      liquidityTrap: true,           // Monetary policy ineffective
+    },
+  },
+  
+  // ===========================================================================
+  // TIER 5: SYSTEMIC COLLAPSE SCENARIOS
+  // ===========================================================================
+  
+  /** Commons collapse - shared resources depleted */
+  COMMONS_COLLAPSE: {
+    type: 'RegulatoryShock' as const,
+    severity: 'Critical' as const,
+    duration: 365,
+    params: {
+      resourceDepletion: 0.9,        // 90% of commons exhausted
+      tragedyOfCommons: true,        // Rational actors destroy shared goods
+      publicGoodsFailure: true,      // No one contributes
+      freeRiderEpidemic: true,       // Everyone takes, no one gives
+      trustCollapse: 0.1,            // Trust drops to 10%
+      cooperationBreakdown: true,    // Coordination impossible
+      externalitiesIgnored: true,    // No one pays true costs
+    },
+  },
+  
+  /** Cartel takeover - oligopoly captures the system */
+  CARTEL_TAKEOVER: {
+    type: 'CartelFormation' as const,
+    severity: 'Critical' as const,
+    duration: 730, // 2 years
+    params: {
+      cartelSize: 5,
+      marketControlTarget: 0.8,      // 80% market control
+      reputationInflation: 0.5,      // Massive score manipulation
+      priceFixing: true,             // Coordinated pricing
+      barrierToEntry: 0.95,          // 95% harder for new entrants
+      regulatorCapture: true,        // Governance compromised
+      whistleblowerSuppression: true,// Dissent punished
+      innovationSuppression: 0.8,    // 80% less innovation
+      rentExtraction: 0.3,           // 30% extracted as rent
+    },
+  },
+  
+  /** Hyperinflation - currency becomes worthless */
+  HYPERINFLATION: {
+    type: 'TreasuryBug' as const,
+    severity: 'Critical' as const,
+    duration: 180,
+    params: {
+      mintMultiplier: 1000000,       // Million-fold increase
+      detectionDelay: 30,            // Month until detected
+      priceDoubling: 7,              // Prices double every 7 days
+      currencyFlight: true,          // Everyone exits to alternatives
+      barterEconomy: true,           // Return to direct exchange
+      wealthWipeout: 0.99,           // 99% of savings destroyed
+    },
+  },
+  
+  /** Governance deadlock - system cannot make decisions */
+  GOVERNANCE_DEADLOCK: {
+    type: 'RegulatoryShock' as const,
+    severity: 'High' as const,
+    duration: 365,
+    params: {
+      decisionParalysis: true,       // No new policies
+      factionalization: 0.8,         // 80% polarized
+      vetoAbuse: true,               // Minorities block everything
+      legitimacyCrisis: true,        // No one accepts authority
+      constitutionalCrisis: true,    // Rules contradict
+      emergencyPowersAbuse: true,    // Exceptions become norm
+    },
+  },
 };
 
 // =============================================================================

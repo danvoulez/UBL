@@ -187,6 +187,161 @@ export const ENHANCED_SCENARIOS: Record<string, EnhancedScenario> = {
     marketDynamics: true,
     socialContagion: true,
   },
+  
+  // ===========================================================================
+  // TIER 3: EXISTENTIAL SCENARIOS
+  // ===========================================================================
+  
+  /** AGI Singularity - superintelligent AI emerges */
+  AGI_SINGULARITY: {
+    name: 'AGI Singularity',
+    description: 'Superintelligent AI makes 99% of scripts obsolete overnight',
+    duration: { years: 5 },
+    clockPreset: 'FIVE_YEARS_FIVE_MINUTES',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      // Year 1: Normal operations
+      { preset: 'DEMAND_BOOM', triggerAtDay: 180 },
+      // Year 2: The Singularity
+      { preset: 'AGI_SINGULARITY', triggerAtDay: 365 },
+      // Cascading effects
+      { preset: 'MASS_DEFAULT', triggerAtDay: 380 },
+      { preset: 'GUARDIAN_EXIT', triggerAtDay: 400 },
+      { preset: 'CONTAGION_PANIC', triggerAtDay: 420 },
+      // Year 3-5: New paradigm or collapse?
+    ],
+    randomChaosRate: 0.02,
+    metricsInterval: 30,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
+  
+  /** Deflation Trap - economy enters deflationary spiral */
+  DEFLATION_TRAP: {
+    name: 'Deflation Trap',
+    description: 'Prices spiral down, hoarding increases, economy freezes',
+    duration: { years: 5 },
+    clockPreset: 'FIVE_YEARS_FIVE_MINUTES',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      // Initial shock
+      { preset: 'MARKET_CRASH', triggerAtDay: 90 },
+      // Deflation sets in
+      { preset: 'DEFLATION_TRAP', triggerAtDay: 180 },
+      // Credit markets freeze
+      { preset: 'CREDIT_FREEZE', triggerAtDay: 270 },
+      // Attempted stimulus (treasury windfall)
+      { preset: 'TREASURY_WINDFALL', triggerAtDay: 365 },
+      // But liquidity trap means it doesn't help
+      { preset: 'CONTAGION_PANIC', triggerAtDay: 500 },
+    ],
+    randomChaosRate: 0.01,
+    metricsInterval: 30,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
+  
+  // ===========================================================================
+  // TIER 5: SYSTEMIC COLLAPSE SCENARIOS
+  // ===========================================================================
+  
+  /** Commons Collapse - tragedy of the commons destroys shared resources */
+  COMMONS_COLLAPSE: {
+    name: 'Commons Collapse',
+    description: 'Shared resources depleted, cooperation breaks down',
+    duration: { years: 3 },
+    clockPreset: 'MONTHLY',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      // Free riders emerge
+      { preset: 'REPUTATION_INFLATION', triggerAtDay: 90 },
+      // Commons start depleting
+      { preset: 'COMMONS_COLLAPSE', triggerAtDay: 180 },
+      // Trust collapses
+      { preset: 'CONTAGION_PANIC', triggerAtDay: 270 },
+      // Everyone defects
+      { preset: 'MASS_DEFAULT', triggerAtDay: 365 },
+    ],
+    randomChaosRate: 0.02,
+    metricsInterval: 14,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
+  
+  /** Cartel Takeover - oligopoly captures the entire system */
+  CARTEL_TAKEOVER: {
+    name: 'Cartel Takeover',
+    description: '5 guardians form cartel, capture 80% of market',
+    duration: { years: 5 },
+    clockPreset: 'FIVE_YEARS_FIVE_MINUTES',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      // Initial cartel formation
+      { preset: 'CARTEL_FORMATION', triggerAtDay: 180 },
+      // Cartel consolidates power
+      { preset: 'CARTEL_TAKEOVER', triggerAtDay: 365 },
+      // Reputation manipulation
+      { preset: 'REPUTATION_INFLATION', triggerAtDay: 500 },
+      // New entrants blocked, innovation dies
+      { preset: 'CREDIT_FREEZE', triggerAtDay: 730 },
+      // System ossifies
+    ],
+    randomChaosRate: 0.005,
+    metricsInterval: 30,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
+  
+  /** Hyperinflation - currency becomes worthless */
+  HYPERINFLATION: {
+    name: 'Hyperinflation',
+    description: 'Treasury bug causes million-fold money supply increase',
+    duration: { years: 2 },
+    clockPreset: 'MONTHLY',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      // Treasury bug
+      { preset: 'HYPERINFLATION', triggerAtDay: 30 },
+      // Panic as prices double weekly
+      { preset: 'BANK_RUN', triggerAtDay: 60 },
+      { preset: 'CONTAGION_PANIC', triggerAtDay: 90 },
+      // Barter economy emerges
+      { preset: 'CREDIT_FREEZE', triggerAtDay: 120 },
+    ],
+    randomChaosRate: 0.03,
+    metricsInterval: 7,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
+  
+  /** Governance Deadlock - system cannot make decisions */
+  GOVERNANCE_DEADLOCK: {
+    name: 'Governance Deadlock',
+    description: 'Factions paralyze decision-making, legitimacy collapses',
+    duration: { years: 3 },
+    clockPreset: 'MONTHLY',
+    populationPreset: 'LARGE',
+    chaosEvents: [
+      // Factionalization begins
+      { preset: 'GOVERNANCE_DEADLOCK', triggerAtDay: 90 },
+      // No response to crisis
+      { preset: 'MARKET_CRASH', triggerAtDay: 180 },
+      // System can't adapt
+      { preset: 'MASS_DEFAULT', triggerAtDay: 270 },
+      // Legitimacy crisis
+      { preset: 'GUARDIAN_EXIT', triggerAtDay: 365 },
+    ],
+    randomChaosRate: 0.02,
+    metricsInterval: 14,
+    realisticBehaviors: true,
+    marketDynamics: true,
+    socialContagion: true,
+  },
 };
 
 // =============================================================================

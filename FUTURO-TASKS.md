@@ -693,7 +693,7 @@
 
 > **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
 > 
-> **Progresso:** 100 tarefas feitas / 77 pendentes (56%)
+> **Progresso:** 102 tarefas feitas / 75 pendentes (58%)
 > **Testes:** 419 passando
 
 ---
@@ -777,9 +777,9 @@
 - [x] � Sessions persistidas no Event Store (`core/sessions/session-manager.ts`)
 - [x] � "Right to Forget" via `forgetSession()`
 
-**D.4 Cenários Avançados** (~6h)
-- [ ] 🟡 TIER 3: AGI_SINGULARITY, DEFLATION_TRAP
-- [ ] 🟡 TIER 5: COMMONS_COLLAPSE, CARTEL_TAKEOVER
+**D.4 Cenários Avançados** ✅
+- [x] � TIER 3: AGI_SINGULARITY, DEFLATION_TRAP
+- [x] � TIER 5: COMMONS_COLLAPSE, CARTEL_TAKEOVER, HYPERINFLATION, GOVERNANCE_DEADLOCK
 
 ---
 
