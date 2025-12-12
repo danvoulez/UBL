@@ -88,6 +88,9 @@ export class LoanAggregate {
       case 'InterestAccrued':
         this.applyInterestAccrued(event);
         break;
+      case 'LoanDelinquent':
+        this.applyLoanDelinquent(event);
+        break;
     }
   }
   
@@ -233,6 +236,25 @@ export class LoanAggregate {
     };
   }
   
+  private applyLoanDelinquent(event: Event): void {
+    if (!this.state) return;
+    
+    const payload = event.payload as {
+      loanId: EntityId;
+      missedPayments: number;
+      daysPastDue: number;
+    };
+    
+    if (payload.loanId !== this.loanId) return;
+    
+    this.state = {
+      ...this.state,
+      status: 'Delinquent',
+      missedPayments: payload.missedPayments,
+      version: this.state.version + 1,
+    };
+  }
+  
   // ---------------------------------------------------------------------------
   // QUERIES
   // ---------------------------------------------------------------------------
@@ -264,6 +286,46 @@ export class LoanAggregate {
   
   getPayoffAmount(): bigint {
     return this.state?.remainingBalance ?? 0n;
+  }
+  
+  /**
+   * Get repayment progress statistics
+   */
+  getRepaymentProgress(): {
+    percentPaid: number;
+    remainingPayments: bigint;
+    totalPaid: bigint;
+    principal: bigint;
+  } {
+    if (!this.state) {
+      return {
+        percentPaid: 0,
+        remainingPayments: 0n,
+        totalPaid: 0n,
+        principal: 0n,
+      };
+    }
+    
+    const percentPaid = this.state.totalOwed > 0n
+      ? Math.floor(Number(this.state.totalPaid * 100n / this.state.totalOwed))
+      : 0;
+    
+    return {
+      percentPaid,
+      remainingPayments: this.state.remainingBalance,
+      totalPaid: this.state.totalPaid,
+      principal: this.state.principal,
+    };
+  }
+  
+  /**
+   * Check if loan is in good standing (not defaulted or delinquent)
+   */
+  isInGoodStanding(): boolean {
+    if (!this.state) return false;
+    
+    const badStatuses: LoanStatus[] = ['Defaulted', 'Delinquent'];
+    return !badStatuses.includes(this.state.status);
   }
 }
 
