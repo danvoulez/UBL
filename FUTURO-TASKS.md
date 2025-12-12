@@ -717,29 +717,29 @@
 
 ---
 
-### 🟡 FASE 2: INTEGRIDADE (Technical Debt)
+### ✅ FASE 2: INTEGRIDADE (Technical Debt) - COMPLETO
 > "Corrigir o que está hardcoded ou incompleto"
 
-**2.1 Event Store** (~3h)
-- [ ] 🔴 Add `query()` method to EventStore for filtering
-- [ ] 🔴 Proper aggregate versioning (not hardcoded `1`)
+**2.1 Event Store** ✅
+- [x] � Add `query()` method to EventStore for filtering
+- [x] � Proper aggregate versioning (`getNextVersion()`)
 
-**2.2 Transactions** (~4h)
-- [ ] 🔴 IntentTransaction interface with compensation steps
-- [ ] 🔴 Atomic event append for transaction commits
-- [ ] 🔴 Correlation ID em eventos relacionados (audit trail)
+**2.2 Transactions** ✅
+- [x] � IntentTransaction interface with compensation steps
+- [x] � Saga pattern with automatic rollback
+- [x] � Correlation ID em eventos relacionados (audit trail)
 
-**2.3 Testes Restantes** (~3h)
-- [ ] 🔴 `tests/business/agent-economy/loans.test.ts`
-- [ ] 🔴 `tests/business/agent-economy/trajectory.test.ts`
+**2.3 Testes Restantes** 🟡
+- [x] � `tests/business/agent-economy/loans.test.ts`
+- [x] � `tests/business/agent-economy/trajectory.test.ts`
 - [ ] 🔴 `tests/business/perception/watcher-lifecycle.test.ts`
 - [ ] 🔴 `tests/business/perception/shadow-graph.test.ts`
 
-**2.4 Economic Gatekeeper** (~3h) 🆕
+**2.4 Economic Gatekeeper** ✅
 > Separação de concerns: Physics (Container) vs Policy (Economy)
-- [ ] 🔴 `core/economy/gatekeeper.ts` - Middleware para transfers
-- [ ] 🔴 Interface `ICircuitBreaker` e `ITreasury` (loose coupling)
-- [ ] 🔴 `assessTransfer()` - Calcula fees antes de executar
+- [x] � `core/economy/gatekeeper.ts` - Middleware para transfers
+- [x] � Interface `ICircuitBreaker` e `ITreasury` (loose coupling)
+- [x] � `assessTransfer()` - Calcula fees antes de executar
 
 ---
 
