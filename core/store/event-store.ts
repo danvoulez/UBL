@@ -391,7 +391,11 @@ export function createInMemoryEventStore(): EventStore {
       if (criteria.actor) {
         filtered = filtered.filter(e => {
           if (criteria.actor!.type && e.actor.type !== criteria.actor!.type) return false;
-          if (criteria.actor!.entityId && e.actor.type === 'Entity' && e.actor.entityId !== criteria.actor!.entityId) return false;
+          if (criteria.actor!.entityId) {
+            // If filtering by entityId, actor must be Entity type with matching ID
+            if (e.actor.type !== 'Entity') return false;
+            if (e.actor.entityId !== criteria.actor!.entityId) return false;
+          }
           return true;
         });
       }
