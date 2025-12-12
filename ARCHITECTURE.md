@@ -13,7 +13,8 @@ This system is **universal**—it can model any business domain. Two key insight
 ╠═══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                               ║
 ║   Events ───▶ Agreements ───▶ Containers ───▶ Permissions ───▶ Actions       ║
-║     │             │               │               │               │           ║
+║     │             │               │               │               3
+│           ║
 ║     ▼             ▼               ▼               ▼               ▼           ║
 ║  IMMUTABLE    UNIVERSAL       FRACTAL        CONTEXTUAL      AUDITED         ║
 ║   FACTS       CONTRACTS      BOUNDARIES      SECURITY        MEMORY          ║
@@ -117,6 +118,34 @@ core/
 ├── security/               # ← AUTHORIZATION
 │   ├── authorization.ts   #    Agreement-Based Access Control
 │   └── authentication.ts  #    JWT, API keys
+│
+├── economy/                # ← ECONOMIC SYSTEM (NEW)
+│   ├── fitness.ts         #    Multi-dimensional fitness scoring
+│   └── guardian-scoring.ts#    Guardian reputation & ranking
+│
+├── enforcement/            # ← SECURITY & DETECTION (NEW)
+│   ├── anomaly-detection.ts#   Statistical outlier detection
+│   └── cartel-detection.ts#    Graph-based collusion detection
+│
+├── sessions/               # ← SESSION MANAGEMENT (NEW)
+│   └── session-manager.ts #    Session lifecycle, Right to Forget
+│
+├── governance/             # ← GOVERNANCE SYSTEM (NEW)
+│   ├── three-branch.ts    #    Executive/Legislative/Judicial
+│   ├── monetary-policy.ts #    Taylor Rule, OMOs, lending
+│   └── quadratic-funding.ts#   Public goods funding
+│
+├── interop/                # ← CROSS-REALM (NEW)
+│   ├── uis-1.0.ts         #    Universal Interoperability Standard
+│   └── federated-ledger.ts#    Vector clocks, Merkle trees, sync
+│
+├── benchmarking/           # ← METRICS & GAMIFICATION (NEW)
+│   ├── benchmark-framework.ts# Multi-dimensional health scoring
+│   └── achievements.ts    #    Gamification, milestones, rewards
+│
+├── simulation/             # ← CHAOS ENGINEERING (NEW)
+│   ├── chaos-injector.ts  #    TIER 1-5 chaos scenarios
+│   └── scenario-runner-v2.ts#  Multi-year simulation runner
 │
 ├── trajectory/             # ← AUDIT TRAIL
 │   ├── trace.ts           #    Trace tracking
@@ -316,6 +345,173 @@ await containers.deposit(wallet.id, {
 2. **Bootstrap** - Run `bootstrap(eventStore)` on startup
 3. **Container Manager** - Use for all container operations
 4. **Realm Setup** - Create tenant realms via `containers.createRealm()`
+
+---
+
+## Advanced Features
+
+### Three-Branch Governance
+
+```typescript
+import { createGovernanceCoordinator } from './core/governance/three-branch';
+
+const governance = createGovernanceCoordinator();
+
+// Executive action
+const action = governance.proposeAction('policy-change', { ... }, executorId);
+
+// Legislative proposal
+const proposal = governance.submitProposal('new-law', 'Description', proposerId);
+governance.castVote(proposal.id, voterId, 'For');
+
+// Judicial review
+const ruling = governance.fileCase('constitutional-challenge', caseDetails, plaintiffId);
+```
+
+### Monetary Policy (Taylor Rule)
+
+```typescript
+import { createMonetaryPolicyEngine } from './core/governance/monetary-policy';
+
+const centralBank = createMonetaryPolicyEngine({
+  targetInflation: 0.02,
+  naturalRate: 0.025,
+});
+
+// Get optimal rate based on economic indicators
+const rate = centralBank.calculateTaylorRate({
+  inflation: 0.03,
+  outputGap: 0.01,
+  unemployment: 0.04,
+  // ...
+});
+
+// Execute open market operations
+centralBank.executeOMO('Buy', 'Bond', 1000000n, 98.5);
+```
+
+### Quadratic Funding for Public Goods
+
+```typescript
+import { createQuadraticFundingEngine } from './core/governance/quadratic-funding';
+
+const qf = createQuadraticFundingEngine({ matchingPool: 100000n });
+
+// Create funding round
+const round = qf.createRound('Q1 2024', 'First quarter funding');
+
+// Submit project
+const project = qf.submitProject(round.id, 'Open Source Library', 'Description', ownerId);
+
+// Contributions (quadratic formula amplifies small donations)
+qf.contribute(project.id, donor1, 10n);  // √10 = 3.16
+qf.contribute(project.id, donor2, 10n);  // √10 = 3.16
+// Total: (3.16 + 3.16)² = 40 matched vs 20 direct
+
+// Calculate results
+const results = qf.calculateFunding(round.id);
+```
+
+### Cross-Realm Interoperability (UIS 1.0)
+
+```typescript
+import { createUISGateway } from './core/interop/uis-1.0';
+
+const gateway = createUISGateway({ realmId: myRealmId });
+
+// Establish trust
+gateway.establishTrust({
+  realmId: partnerRealmId,
+  trustLevel: 'Verified',
+  capabilities: ['EntityTransfer', 'AssetTransfer'],
+});
+
+// Transfer entity to another realm
+const transfer = gateway.initiateEntityTransfer(
+  partnerRealmId,
+  entityId,
+  'Agent',
+  entityData,
+  'Migration'
+);
+```
+
+### Federated Ledger (Vector Clocks)
+
+```typescript
+import { createFederatedLedger } from './core/interop/federated-ledger';
+
+const ledger = createFederatedLedger({
+  realmId: myRealmId,
+  conflictStrategy: 'LastWriteWins',
+});
+
+// Append local event
+ledger.appendLocal(event);
+
+// Sync with remote realm
+const request = ledger.createSyncRequest(remoteRealmId);
+const response = await sendToRemote(request);
+ledger.applySyncResponse(response, remoteRealmId);
+```
+
+### Benchmarking & Health Metrics
+
+```typescript
+import { createBenchmarkEngine } from './core/benchmarking/benchmark-framework';
+
+const benchmark = createBenchmarkEngine();
+
+const score = benchmark.calculate({
+  // Survival metrics
+  totalAgents: 100,
+  activeAgents: 90,
+  // Equality metrics
+  giniCoefficient: 0.3,
+  // Resilience metrics
+  recoveryTime: 5,
+  systemUptime: 0.99,
+  // ...
+});
+
+console.log(score.composite);  // 0-100
+console.log(score.status);     // 'Healthy' | 'Warning' | 'Critical'
+```
+
+### Achievements & Gamification
+
+```typescript
+import { createAchievementEngine } from './core/benchmarking/achievements';
+
+const achievements = createAchievementEngine();
+
+// Check progress for entity
+const unlocked = achievements.checkProgress(entityId, {
+  days_active: 30,
+  total_earned: 1000,
+  connections: 10,
+});
+
+// Get leaderboard
+const leaderboard = achievements.getLeaderboard(10);
+```
+
+### Chaos Engineering & Simulation
+
+```typescript
+import { CHAOS_SCENARIOS } from './core/simulation/chaos-injector';
+import { ENHANCED_SCENARIOS } from './core/simulation/scenario-runner-v2';
+
+// Available scenarios:
+// TIER 1: MODEL_RELEASE, MARKET_CRASH, CARTEL_FORMATION
+// TIER 2: FLASH_CRASH, BANK_RUN, CREDIT_FREEZE
+// TIER 3: AGI_SINGULARITY, DEFLATION_TRAP
+// TIER 5: COMMONS_COLLAPSE, CARTEL_TAKEOVER, HYPERINFLATION
+
+// Run multi-year simulation
+const scenario = ENHANCED_SCENARIOS.REALISTIC_APOCALYPSE;
+// 5 years with cascading chaos events
+```
 
 ---
 

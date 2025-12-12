@@ -65,6 +65,15 @@ This isn't a design pattern. It's the physics of business.
 - **Policy Engine** — Flexible rules that can override role decisions
 - **Security as Memory** — Authorization decisions are part of the audit trail
 
+### Advanced Systems
+- **🏛️ Three-Branch Governance** — Executive, Legislative, Judicial separation
+- **💰 Monetary Policy** — Taylor Rule, open market operations, lending facilities
+- **🌱 Quadratic Funding** — Democratic public goods funding
+- **🌐 Cross-Realm** — UIS 1.0 protocol, federated ledger with vector clocks
+- **📊 Benchmarking** — 5-dimension health scoring (Survival, Equality, Resilience...)
+- **🏆 Achievements** — 30+ achievements, 6 tiers, gamification
+- **🔥 Chaos Engineering** — TIER 1-5 scenarios, multi-year simulations
+
 ### Production Ready
 - **Snapshots & Projections** — Performance optimizations for scale
 - **Sagas** — Distributed transactions with compensation
@@ -119,24 +128,26 @@ core/
 ├── shared/          # Universal primitives (EntityId, Timestamp, Duration...)
 ├── schema/          # Domain model (Event, Party, Asset, Agreement, Role)
 ├── universal/       # Generalized model with realms
-├── enforcement/     # Hash chain, temporal rules, invariants
 ├── store/           # Event persistence (in-memory + PostgreSQL)
 ├── engine/          # Workflow & flow execution
 ├── aggregates/      # State reconstruction from events
 ├── api/             # Intent API, queries, HTTP, real-time
 ├── security/        # Authorization, policies, audit
+├── economy/         # 🆕 Fitness scoring, guardian reputation
+├── enforcement/     # 🆕 Anomaly detection, cartel detection
+├── sessions/        # 🆕 Session lifecycle, Right to Forget
+├── governance/      # 🆕 Three-branch, monetary policy, quadratic funding
+├── interop/         # 🆕 UIS 1.0, federated ledger, cross-realm
+├── benchmarking/    # 🆕 Health metrics, achievements, gamification
+├── simulation/      # 🆕 Chaos engineering, scenario runner
 ├── memory/          # Narrative logging, stories
 ├── agent/           # AI-powered natural language interface
 ├── evolution/       # Schema versioning, upcasting, migrations
 ├── performance/     # Snapshots, projections, caching
 ├── distributed/     # Sagas, cross-realm, conflict resolution
 ├── scheduling/      # Time-based triggers, deadlines
-├── attachments/     # Documents, signatures
-├── outbound/        # Webhooks, notifications, integrations
 ├── observability/   # Metrics, tracing, health
 ├── operational/     # Rate limits, quotas, export, archival
-├── templates/       # Agreement & workflow templates
-├── search/          # Full-text & semantic search
 └── testing/         # Time-travel, fixtures, property tests
 ```
 
