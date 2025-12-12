@@ -693,8 +693,8 @@
 
 > **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
 > 
-> **Progresso:** 93 tarefas feitas / 84 pendentes (53%)
-> **Testes:** 414 passando
+> **Progresso:** 97 tarefas feitas / 80 pendentes (55%)
+> **Testes:** 403 passando
 
 ---
 
@@ -764,13 +764,13 @@
 ### 🟡 SPRINT D: FEATURES - PRÓXIMO
 > Novas funcionalidades
 
-**D.1 Economy Core** (~4h)
-- [ ] 🔴 `core/economy/fitness.ts` - Revised fitness function (log/arctan)
-- [ ] 🔴 `core/economy/guardian-scoring.ts` - Multi-dimensional scoring + tiers
+**D.1 Economy Core** ✅
+- [x] � `core/economy/fitness.ts` - Revised fitness function (log/arctan)
+- [x] � `core/economy/guardian-scoring.ts` - Multi-dimensional scoring + tiers
 
-**D.2 Security Avancado** (~3h)
-- [ ] 🔴 `core/enforcement/anomaly-detection.ts` - 3σ rule, circuit breakers
-- [ ] 🔴 `core/enforcement/cartel-detection.ts` - Graph cycle detection
+**D.2 Security Avancado** ✅
+- [x] � `core/enforcement/anomaly-detection.ts` - 3σ rule, circuit breakers
+- [x] � `core/enforcement/cartel-detection.ts` - Graph cycle detection
 
 **D.3 Session Materialization** (~4h)
 - [ ] 🔴 `SESSION_TYPE` em `agreement-types.ts`
