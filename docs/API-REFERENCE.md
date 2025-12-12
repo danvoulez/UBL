@@ -1,19 +1,196 @@
 # API Reference
 
 > Complete reference for all UBL modules and their public APIs.
+> 
+> **Last Updated:** 2025-12-12
 
 ---
 
 ## Table of Contents
 
-1. [Core Modules](#core-modules)
-2. [Economy](#economy)
-3. [Enforcement](#enforcement)
-4. [Sessions](#sessions)
-5. [Governance](#governance)
-6. [Interoperability](#interoperability)
-7. [Benchmarking](#benchmarking)
-8. [Simulation](#simulation)
+1. [HTTP API (Antenna)](#http-api-antenna)
+2. [Intent System](#intent-system)
+3. [Core Modules](#core-modules)
+4. [Economy](#economy)
+5. [Enforcement](#enforcement)
+6. [Sessions](#sessions)
+7. [Governance](#governance)
+8. [Interoperability](#interoperability)
+9. [Benchmarking](#benchmarking)
+10. [Simulation](#simulation)
+
+---
+
+## HTTP API (Antenna)
+
+The Antenna is the HTTP gateway for UBL. **One endpoint to rule them all.**
+
+### Starting the Server
+
+```typescript
+import { createAntenna } from './antenna';
+
+const antenna = createAntenna({
+  port: 3000,
+  host: '0.0.0.0',
+  corsOrigins: ['http://localhost:5173'],
+  masterApiKey: 'your-api-key',
+});
+
+await antenna.start();
+```
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/intent` | Process any intent (canonical) |
+| `POST` | `/` | Process any intent (alias) |
+| `GET` | `/health` | Health check |
+| `GET` | `/affordances` | What can I do? |
+| `POST` | `/chat` | Conversational AI wrapper |
+| `POST` | `/simulate` | Dry-run an intent |
+| `GET` | `/schema/:intent` | Get schema for an intent |
+| `WS` | `/subscribe` | Real-time events |
+
+### Intent Request
+
+```bash
+curl -X POST http://localhost:3000/intent \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "intent": "transfer:credits",
+    "realm": "your-realm-id",
+    "payload": {
+      "from": "wallet-a",
+      "to": "wallet-b",
+      "amount": 100,
+      "currency": "UBL"
+    }
+  }'
+```
+
+### Intent Response
+
+```json
+{
+  "success": true,
+  "outcome": {
+    "type": "Transferred",
+    "asset": "credit-123",
+    "to": "wallet-b"
+  },
+  "events": [
+    { "id": "evt-1", "type": "ContainerItemWithdrawn" },
+    { "id": "evt-2", "type": "ContainerItemDeposited" }
+  ],
+  "affordances": [
+    { "intent": "query:balance", "description": "Check balance" },
+    { "intent": "transfer:credits", "description": "Transfer more" }
+  ],
+  "meta": {
+    "processedAt": 1702389600000,
+    "processingTime": 45
+  }
+}
+```
+
+### Chat API (Conversational)
+
+```bash
+curl -X POST http://localhost:3000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": { "text": "Transfer 100 credits to Bob" },
+    "startSession": {
+      "realmId": "your-realm",
+      "actor": { "type": "Entity", "entityId": "user-123" }
+    }
+  }'
+```
+
+### WebSocket Subscriptions
+
+```typescript
+const ws = new WebSocket('ws://localhost:3000/subscribe');
+
+ws.send(JSON.stringify({
+  type: 'subscribe',
+  realm: 'your-realm',
+  filters: {
+    eventTypes: ['TransactionExecuted', 'AgreementProposed'],
+    entityIds: ['entity-123'],
+  }
+}));
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Event:', data);
+};
+```
+
+---
+
+## Intent System
+
+### Available Intents (12 modules, 100+ intents)
+
+| Module | File | Key Intents |
+|--------|------|-------------|
+| **Entity** | `entity-intents.ts` | `register`, `update`, `deactivate` |
+| **Agreement** | `agreement-intents.ts` | `propose`, `consent`, `fulfill`, `terminate` |
+| **Asset** | `asset-intents.ts` | `register-asset`, `transfer`, `transition` |
+| **Query** | `query-intents.ts` | `query`, `explain`, `simulate`, `what-can-i-do` |
+| **Dispute** | `dispute-intents.ts` | `dispute:open`, `dispute:resolve` |
+| **Auth** | `auth-intents.ts` | `delegate:auth` |
+| **Workspace** | `workspace-intents.ts` | `file:create`, `file:move`, `file:delete` |
+| **Admin** | `admin-intents.ts` | `realm:create`, `user:create`, `apikey:create` |
+| **Agent Economy** | `agent-economy-intents.ts` | `register:agent`, `transfer:credits`, `record:trajectory` |
+| **Perception** | `perception-intents.ts` | `create:watcher`, `register:shadow`, `promote:shadow` |
+| **Consciousness** | `consciousness-intents.ts` | `start:daemon`, `stop:daemon`, `adjust:daemon-budget` |
+| **Obligation** | `obligation-intents.ts` | `declare:obligation`, `fulfill:obligation` |
+
+### Intent Definition
+
+```typescript
+interface Intent<T = unknown> {
+  intent: string;           // What do you want to do?
+  realm: EntityId;          // In which realm?
+  actor: ActorReference;    // Who is making this intent?
+  payload: T;               // Intent-specific data
+  timestamp?: Timestamp;    // When (for offline-first)
+  idempotencyKey?: string;  // Safe retries
+}
+```
+
+### Creating Custom Intents
+
+```typescript
+import { defineIntent } from './core/api/intent-api';
+
+const MY_CUSTOM_INTENT = defineIntent({
+  name: 'my:custom-action',
+  description: 'Does something custom',
+  payloadSchema: {
+    type: 'object',
+    properties: {
+      targetId: { type: 'string' },
+      value: { type: 'number' },
+    },
+    required: ['targetId', 'value'],
+  },
+  handler: async (intent, context) => {
+    // Your logic here
+    return {
+      success: true,
+      outcome: { type: 'Created', entity: result, id: result.id },
+      events: [],
+      affordances: [],
+    };
+  },
+});
+```
 
 ---
 
