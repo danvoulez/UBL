@@ -182,7 +182,7 @@ AWS_REGION=us-east-1
 
 ---
 
-**Última atualização:** 2024-12-19
+**Última atualização:** 2025-12-12
 
 
 

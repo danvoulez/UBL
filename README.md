@@ -285,73 +285,37 @@ npm run dev
 ### Additional Documentation
 | Document | Description |
 |----------|-------------|
-| [docs/DEPLOY.md](./docs/DEPLOY.md) | Deployment guide |
-| [core/store/postgres-schema.sql](./core/store/postgres-schema.sql) | Production database schema |
-
-**Note:** The PHILOSOPHY.md and ARCHITECTURE.md documents are the authoritative source for understanding the system's design principles. This README provides a quick overview and practical examples.
+| [IMPLEMENTATION.md](./IMPLEMENTATION.md) | Technical X-ray - how it actually works |
+| [ROADMAP.md](./ROADMAP.md) | Project status and progress |
+| [CHANGELOG.md](./CHANGELOG.md) | Version history |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines |
+| [SETUP-LOCAL.md](./SETUP-LOCAL.md) | Local development setup |
+| [docs/API-REFERENCE.md](./docs/API-REFERENCE.md) | Complete API reference |
 
 ---
 
-## 🎓 Se você é novo no UBL, comece por aqui
+## 🎓 Getting Started
 
-### 1. Entender a Filosofia
+### 1. Understand the Philosophy
+Read [PHILOSOPHY.md](./PHILOSOPHY.md) to understand:
+- Why every relationship is an Agreement
+- How Containers provide governance boundaries
+- The fractal nature of the system
 
-Leia `docs/REALM-CONTRACT.md` para entender:
-- O que são Realms
-- Como Agreements estabelecem Realms
-- Por que isolamento é importante
-
-### 2. Rodar o Pipeline
-
+### 2. Run Tests
 ```bash
-cd "/Users/voulezvous/new aws/ORGANIZAR"
-./cicd/pipeline-oficial.sh
+npm install
+npm test
 ```
 
-Isso valida:
-- Ambiente configurado
-- Testes passando
-- Build funcionando
+### 3. Explore the Code
+- `core/universal/` - Container primitive, agreements, realms
+- `core/governance/` - Three-branch, monetary policy, quadratic funding
+- `core/interop/` - Cross-realm communication
+- `core/benchmarking/` - Health metrics and achievements
 
-### 3. Testar a API
-
-```bash
-# Health check
-curl -s http://localhost:3000/health | jq
-
-# Chat com o agente
-curl -s -X POST http://localhost:3000/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "message": { "text": "Olá, me mostra do que você é capaz." },
-    "startSession": {
-      "realmId": "test-realm",
-      "actor": { "type": "System", "systemId": "test" }
-    }
-  }' | jq
-```
-
-### 4. Ler Documentação Operacional
-
-- `docs/OBSERVABILITY-UBL.md` - Como ler logs e métricas
-- `docs/GOVERNANCA-COMPUTAVEL-UBL.md` - Como governança funciona
-- `docs/BUSCA-E-CONSISTENCIA-EVENTUAL-UBL.md` - Como busca funciona
-
-### 5. Explorar Testes como Exemplos
-
-- `tests/integration/api-chat.test.ts` - Como usar a API de chat
-- `tests/integration/realm-contract-invariants.test.ts` - Como Realms funcionam
-- `tests/integration/search/indexing-eventual-consistency.test.ts` - Como busca funciona
-
-### Scripts Tutoriais
-
-Estes scripts no `cicd/` são bons tutores:
-
-- `validate.sh` - Valida ambiente e configuração
-- `testar-api-endpoints.sh` - Mostra como testar a API
-- `verificar-status-aws.sh` - Mostra como verificar infraestrutura
-
-📖 **Guia completo**: Veja `docs/CODIGO-PEDAGOGICO-HUMANO-IA.md` para entender a filosofia de co-manutenção humano-IA.
+### 4. Read the API Reference
+See [docs/API-REFERENCE.md](./docs/API-REFERENCE.md) for complete API documentation.
 
 ---
 
