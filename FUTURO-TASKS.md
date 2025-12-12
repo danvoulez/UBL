@@ -729,11 +729,11 @@
 - [x] � Saga pattern with automatic rollback
 - [x] � Correlation ID em eventos relacionados (audit trail)
 
-**2.3 Testes Restantes** 🟡
-- [x] � `tests/business/agent-economy/loans.test.ts`
-- [x] � `tests/business/agent-economy/trajectory.test.ts`
-- [ ] 🔴 `tests/business/perception/watcher-lifecycle.test.ts`
-- [ ] 🔴 `tests/business/perception/shadow-graph.test.ts`
+**2.3 Testes Restantes** ✅
+- [x] 🟢 `tests/business/agent-economy/loans.test.ts`
+- [x] 🟢 `tests/business/agent-economy/trajectory.test.ts`
+- [x] � `tests/business/perception/watcher-lifecycle.test.ts`
+- [x] � `tests/business/perception/shadow-graph.test.ts`
 
 **2.4 Economic Gatekeeper** ✅
 > Separação de concerns: Physics (Container) vs Policy (Economy)
