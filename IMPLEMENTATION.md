@@ -1354,26 +1354,45 @@ migrations/              # Database schema
 | Intent API | ✅ Complete | All core intents |
 | ABAC | ✅ Complete | Agreement-based roles |
 | Trajectory | ✅ Complete | AuditLogger ready |
-| Projections | ✅ Complete | ProjectionManager |
+| Projections | ✅ Complete | ProjectionManager + cache |
 | Workflows | ✅ Complete | Agreement + Asset workflows |
-| Realms | ⚠️ Partial | RealmManager exists, needs wiring |
-| Agreement Types | ⚠️ Partial | Types defined, registry partial |
-| Enforcement | ⚠️ Partial | Hash chain exists, not enforced |
+| Realms | ✅ Complete | RealmManager + bootstrap |
+| Agreement Types | ✅ Complete | Full registry + SESSION_TYPE |
+| Enforcement | ✅ Complete | Anomaly + Cartel detection |
+| Snapshots | ✅ Complete | Temporal snapshots |
+| Sagas | ✅ Complete | IntentTransaction + compensation |
+| Economy | ✅ Complete | Fitness + Guardian scoring |
+| Sessions | ✅ Complete | Session manager + Right to Forget |
+| Governance | ✅ Complete | Three-branch + Monetary + Quadratic |
+| Interop | ✅ Complete | UIS 1.0 + Federated Ledger |
+| Benchmarking | ✅ Complete | 5-dimension scoring + Achievements |
+| Simulation | ✅ Complete | Chaos TIER 1-5 + Scenarios |
+| Agent | ✅ Complete | Conversation + API |
+| Workspaces | ✅ Complete | Full implementation |
+| Adapters | ✅ Complete | Multiple adapters |
 | Evolution | 📋 Defined | Interfaces only |
-| Snapshots | 📋 Defined | Interfaces only |
-| Sagas | 📋 Defined | Interfaces only |
 | Scheduling | 📋 Defined | Interfaces only |
 | Attachments | 📋 Defined | Interfaces only |
 | Search | 📋 Defined | Interfaces only |
-| Query Language | ⚠️ Partial | QueryBuilder exists |
-| Realtime | ⚠️ Partial | Types defined |
-| Agent | ✅ Complete | Conversation + API |
-| Templates | 📋 Defined | Interfaces only |
-| Outbound | 📋 Defined | Interfaces only |
-| Workspaces | ✅ Complete | Full implementation |
-| Adapters | ✅ Complete | Multiple adapters |
 
-Legend: ✅ Complete | ⚠️ Partial | 📋 Defined (interfaces only)
+Legend: ✅ Complete | 📋 Defined (interfaces only)
+
+### New Modules (Sprint D-F)
+
+| Module | File | Purpose |
+|--------|------|---------|
+| **Economy** | `core/economy/fitness.ts` | Multi-dimensional fitness scoring |
+| **Economy** | `core/economy/guardian-scoring.ts` | Guardian reputation + tiers |
+| **Enforcement** | `core/enforcement/anomaly-detection.ts` | Statistical outlier detection |
+| **Enforcement** | `core/enforcement/cartel-detection.ts` | Graph-based collusion detection |
+| **Sessions** | `core/sessions/session-manager.ts` | Session lifecycle + GDPR |
+| **Governance** | `core/governance/three-branch.ts` | Executive/Legislative/Judicial |
+| **Governance** | `core/governance/monetary-policy.ts` | Taylor Rule + OMOs |
+| **Governance** | `core/governance/quadratic-funding.ts` | Public goods funding |
+| **Interop** | `core/interop/uis-1.0.ts` | Cross-realm protocol |
+| **Interop** | `core/interop/federated-ledger.ts` | Vector clocks + Merkle sync |
+| **Benchmarking** | `core/benchmarking/benchmark-framework.ts` | Health metrics |
+| **Benchmarking** | `core/benchmarking/achievements.ts` | Gamification system |
 
 ---
 
@@ -1463,3 +1482,7 @@ This keeps the kernel incredibly small. You don't program "money features" - you
 ---
 
 *"The implementation follows the philosophy: Agreements establish relationships, Events record facts, and the Ledger tells the story."*
+
+---
+
+**Last Updated:** 2025-12-12

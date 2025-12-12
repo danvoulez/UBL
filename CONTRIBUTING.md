@@ -21,7 +21,7 @@ O UBL é feito para ser mantido por **humanos + IAs** em pé de igualdade. Isso 
 
 ### ❌ NÃO FAZER
 
-1. **Nunca remover comentários marcados com "FASE 10"** sem substituição equivalente
+1. **Nunca remover comentários pedagógicos** sem substituição equivalente
 2. **Nunca apagar testes que funcionam como exemplos de uso**, a menos que:
    - Estejam claramente inválidos, E
    - Seja criado um novo exemplo que cubra o mesmo caminho de uso
@@ -41,9 +41,9 @@ O UBL é feito para ser mantido por **humanos + IAs** em pé de igualdade. Isso 
 
 ---
 
-## Comentários de Fase
+## Comentários Pedagógicos
 
-Comentários marcados com `FASE 10` indicam:
+Comentários marcados indicam:
 
 - **Código pedagógico**: Serve como exemplo vivo
 - **Redundância intencional**: Não remover sem substituição
@@ -52,19 +52,19 @@ Comentários marcados com `FASE 10` indicam:
 ### Exemplos
 
 ```typescript
-// FASE 10 - CÓDIGO PEDAGÓGICO
+// CÓDIGO PEDAGÓGICO
 // Este bloco funciona como exemplo vivo para humanos + IAs.
 // Não remover "redundâncias" aqui sem substituir por algo igualmente didático.
 ```
 
 ```typescript
-// FASE 10 - REDUNDÂNCIA INTENCIONAL
+// REDUNDÂNCIA INTENCIONAL
 // Esta função parece óbvia/repetida, mas existe como âncora semântica.
 // Não "otimizar" removendo sem garantir um equivalente igualmente didático.
 ```
 
 ```typescript
-// FASE 10 - TESTE COMO DOCUMENTAÇÃO
+// TESTE COMO DOCUMENTAÇÃO
 // Este arquivo também funciona como "guia de uso" para humanos + IAs.
 // Ao alterar, preserve a clareza dos cenários e dados de exemplo.
 ```
@@ -105,7 +105,7 @@ Testes importantes estão marcados como **documentação executável**:
 - [ ] Código segue as diretrizes de código pedagógico
 - [ ] Comentários explicam "por que", não apenas "o quê"
 - [ ] Testes servem como exemplos de uso
-- [ ] Nenhum comentário "FASE 10" foi removido sem substituição
+- [ ] Nenhum comentário pedagógico foi removido sem substituição
 - [ ] Build passa (`npm run build`)
 - [ ] Testes passam (`npm test`)
 - [ ] Linter passa (`npm run lint`)
@@ -120,5 +120,5 @@ Testes importantes estão marcados como **documentação executável**:
 
 ---
 
-**Última atualização**: Fase 10 - Código Pedagógico & Co-manutenção Humano-IA
+**Última atualização:** 2025-12-12
 
