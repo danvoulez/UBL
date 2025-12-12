@@ -693,8 +693,8 @@
 
 > **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
 > 
-> **Progresso:** 105 tarefas feitas / 72 pendentes (59%)
-> **Testes:** 469 passando
+> **Progresso:** 107 tarefas feitas / 70 pendentes (60%)
+> **Testes:** 500 passando
 
 ---
 
@@ -791,9 +791,9 @@
 - [x] 🟢 `core/governance/monetary-policy.ts` - Taylor Rule, OMOs, lending facilities
 - [x] 🟢 `core/governance/quadratic-funding.ts` - Public goods funding
 
-**E.2 Cross-Realm** (~6h)
-- [ ] 🔴 `core/interop/uis-1.0.ts` - Cross-realm interoperability
-- [ ] 🔴 Federated ledger support
+**E.2 Cross-Realm** ✅
+- [x] 🟢 `core/interop/uis-1.0.ts` - Cross-realm interoperability
+- [x] 🟢 `core/interop/federated-ledger.ts` - Vector clocks, Merkle trees, conflict resolution
 
 ---
 
