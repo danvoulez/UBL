@@ -693,8 +693,8 @@
 
 > **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
 > 
-> **Progresso:** 102 tarefas feitas / 75 pendentes (58%)
-> **Testes:** 419 passando
+> **Progresso:** 103 tarefas feitas / 74 pendentes (58%)
+> **Testes:** 439 passando
 
 ---
 
@@ -786,8 +786,8 @@
 ### 🔵 SPRINT E: GOVERNANCE - FUTURO
 > Estruturas de governança
 
-**E.1 Three-Branch Governance** (~8h)
-- [ ] 🔴 `core/governance/three-branch.ts` - Executive/Legislative/Judicial
+**E.1 Three-Branch Governance** ✅
+- [x] � `core/governance/three-branch.ts` - Executive/Legislative/Judicial
 - [ ] 🔴 Monetary policy transmission
 - [ ] 🔴 Public goods (quadratic funding)
 
