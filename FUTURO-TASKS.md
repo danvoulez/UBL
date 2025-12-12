@@ -115,11 +115,11 @@
   - Must include execution details (provider, cost)
   - Hash chain verification
 
-### 1.4 Aggregates
+### 1.4 Aggregates ✅ COMPLETO (MEGA SPRINT)
 
-- [ ] 🔴 **WalletAggregate** - Reconstruct balance from events
-- [ ] 🔴 **LoanAggregate** - Track loan status, payments
-- [ ] 🔴 **TrajectoryAggregate** - Agent's action history
+- [x] 🟢 **WalletAggregate** - Reconstruct balance from events
+- [x] 🟢 **LoanAggregate** - Track loan status, payments
+- [x] 🟢 **TrajectoryAggregate** - Agent's action history
 
 ### 1.5 Tests
 
@@ -223,11 +223,11 @@
 - [x] 🟢 `stop:daemon`
 - [x] 🟢 `adjust:daemon-budget`
 
-### 3.4 Continuity (Later)
+### 3.4 Continuity ✅ COMPLETO (MEGA SPRINT)
 
-- [ ] 🔴 Provider pooling strategy
-- [ ] 🔴 Memory hydration protocol
-- [ ] 🔴 Context injection
+- [x] 🟢 Provider pooling strategy
+- [x] 🟢 Memory hydration protocol
+- [x] 🟢 Context injection
 
 ---
 
@@ -365,11 +365,11 @@
 
 > From external review of ARCHITECTURE.md
 
-### 6.1 Container Physics Validation
+### 6.1 Container Physics Validation ✅ COMPLETO (MEGA SPRINT)
 
 **Problem:** Physics matrix (3×4×4×3 = 144 combinations) - not all meaningful
 
-- [ ] 🔴 **Predefine valid physics combinations** in `core/universal/container.ts`
+- [x] 🟢 **Predefine valid physics combinations** in `core/universal/physics-validation.ts`
   ```typescript
   const VALID_PHYSICS = {
     WALLET: ['Strict', 'Values', 'Sealed', 'Disabled'],
@@ -377,8 +377,8 @@
     REALM: ['Strict', 'Subjects', 'Gated', 'Full'],
   } as const;
   ```
-- [ ] 🔴 **Physics validation function** - Reject invalid combinations
-- [ ] 🔴 **Physics confusion attack prevention** - Validate on ALL operations
+- [x] 🟢 **Physics validation function** - Reject invalid combinations
+- [x] 🟢 **Physics confusion attack prevention** - Validate on ALL operations
 
 ### 6.2 Event Store Performance
 
@@ -578,18 +578,17 @@
   - Recovery mechanism - reativa scripts inativos
   - Tuned para intervenção agressiva
 
-- [ ] 🔴 **Guardian Accountability**
+- [x] 🟢 **Guardian Accountability** (MEGA SPRINT)
   - Penalidade de reputação quando script faz default (-5)
   - Penalidade quando script sai (-2)
   - Bônus quando script sobrevive crise (+3)
   - Demotion se reputação < 30
   - Revogação de licença se reputação < 10
-  - Arquivo: `core/simulation/agent-population.ts`
-  - Esforço: 2h
+  - Arquivo: `core/simulation/guardian-accountability.ts`
 
-### 7.3 Health Dashboard
+### 7.3 Health Dashboard ✅ COMPLETO (MEGA SPRINT)
 
-- [ ] 🔴 **SystemHealth interface**
+- [x] 🟢 **SystemHealth interface**
   ```typescript
   interface SystemHealth {
     status: 'HEALTHY' | 'WARNING' | 'CRITICAL' | 'COLLAPSED';
