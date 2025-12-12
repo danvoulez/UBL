@@ -1,192 +1,271 @@
-# Universal Ledger System - Architecture
+# Universal Business Ledger - Architecture
 
-## The Vision: A Universal Business Operating System
+> **174 arquivos TypeScript | 42 módulos | 551 testes**
+> 
+> **Última atualização:** 2025-12-12
 
-This system is **universal**—it can model any business domain. Two key insights:
+---
 
-1. **All business relationships are agreements**
-2. **All governance boundaries are containers**
+## Visão Geral
+
+O UBL é um **sistema operacional para negócios** baseado em event sourcing. Dois princípios fundamentais:
+
+1. **Todo relacionamento é um Agreement**
+2. **Toda fronteira de governança é um Container**
 
 ```
 ╔═══════════════════════════════════════════════════════════════════════════════╗
-║                         UNIVERSAL LEDGER SYSTEM                               ║
+║                         UNIVERSAL BUSINESS LEDGER                              ║
 ╠═══════════════════════════════════════════════════════════════════════════════╣
-║                                                                               ║
-║   Events ───▶ Agreements ───▶ Containers ───▶ Permissions ───▶ Actions       ║
-║     │             │               │               │               3
-│           ║
-║     ▼             ▼               ▼               ▼               ▼           ║
-║  IMMUTABLE    UNIVERSAL       FRACTAL        CONTEXTUAL      AUDITED         ║
-║   FACTS       CONTRACTS      BOUNDARIES      SECURITY        MEMORY          ║
-║                                                                               ║
+║                                                                                ║
+║   Events ───▶ Agreements ───▶ Containers ───▶ Permissions ───▶ Actions        ║
+║     │             │               │               │               │            ║
+║     ▼             ▼               ▼               ▼               ▼            ║
+║  IMUTÁVEL     UNIVERSAL       FRACTAL       CONTEXTUAL       AUDITADO         ║
+║   FATOS       CONTRATOS      FRONTEIRAS     SEGURANÇA        MEMÓRIA          ║
+║                                                                                ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-## Core Concepts
+---
 
-### The Arrow of Time
-
-The past is immutable. Events are facts that have happened—they can never be changed, only compensated for with new events.
+## Estrutura de Módulos
 
 ```
-Genesis ══════════════════════════════════════════════════════════▶ Now
-   │                                                                │
-   │  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐       │
-   │  │ E₁  │──│ E₂  │──│ E₃  │──│ E₄  │──│ E₅  │──│ E₆  │── ··· │
-   │  └─────┘  └─────┘  └─────┘  └─────┘  └─────┘  └─────┘       │
-   │     │        │        │        │        │        │            │
-   │     ▼        ▼        ▼        ▼        ▼        ▼            │
-   │  hash₁ ← hash₂ ← hash₃ ← hash₄ ← hash₅ ← hash₆              │
-   │                                                                │
-   └────────────────── Cryptographic Chain ─────────────────────────┘
-```
-
-### The Container Primitive
-
-Everything is a Container. The difference is in the physics:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         CONTAINER PHYSICS                                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   Fungibility         Topology          Permeability       Execution        │
-│   ───────────         ────────          ────────────       ─────────        │
-│   • Strict            • Values          • Sealed           • Disabled       │
-│   • Versioned         • Objects         • Gated            • Sandboxed      │
-│   • Transient         • Subjects        • Collaborative    • Full           │
-│                       • Links           • Open                              │
-│                                                                             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   CONTAINER_PHYSICS.Wallet     = { Strict, Values, Sealed, Disabled }      │
-│   CONTAINER_PHYSICS.Workspace  = { Versioned, Objects, Collaborative }     │
-│   CONTAINER_PHYSICS.Realm      = { Strict, Subjects, Gated, Full }         │
-│   CONTAINER_PHYSICS.Network    = { Transient, Links, Open, Disabled }      │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### Agreements as the Universal Primitive
-
-Every relationship is an agreement:
-
-| Traditional Model | Universal Model |
-|-------------------|-----------------|
-| John IS an Employee | John HOLDS Employee role VIA Employment Agreement |
-| Mary IS a Customer | Mary HOLDS Customer role VIA Purchase Agreement |
-| Car #123 IS owned by Bob | Car #123 IS owned by Bob VIA Sale Agreement |
-
-## System Architecture
-
-### Module Structure
-
-```
-core/
-├── shared/                 # ← FOUNDATION: Universal primitives
-│   ├── types.ts           #    EntityId, Timestamp, Duration, Validity
-│   └── index.ts           #    Clean exports
+core/                           # 174 arquivos TypeScript
 │
-├── schema/                 # ← DOMAIN MODEL
-│   ├── ledger.ts          #    Event, Party, Asset, Agreement, Role
-│   └── workflow.ts        #    Workflow, Flow definitions
+├── shared/                     # PRIMITIVOS UNIVERSAIS
+│   ├── types.ts               # EntityId, Timestamp, Duration, Validity
+│   └── index.ts               # Exports
 │
-├── universal/              # ← GENERALIZED MODEL
-│   ├── primitives.ts      #    Entity, Agreement, Role
-│   ├── container.ts       #    Container primitive, physics, events
-│   ├── container-manager.ts#   Unified ContainerManager
-│   ├── bootstrap.ts       #    System initialization
-│   ├── agreement-types.ts #    Extensible agreement type registry
-│   └── index.ts           #    Clean exports
+├── schema/                     # MODELO DE DOMÍNIO
+│   ├── ledger.ts              # Event, Party, Asset, Agreement, Role
+│   ├── workflow.ts            # Workflow, Flow definitions
+│   ├── agent-economy.ts       # Entity, Guardian, Constitution, Wallet, Loan
+│   ├── perception.ts          # Watcher, ShadowEntity
+│   ├── consciousness.ts       # Daemon, DaemonLoop
+│   └── unilateral-obligations.ts # Obligations, Reasoning
 │
-├── store/                  # ← PERSISTENCE
-│   ├── event-store.ts     #    EventStore interface
+├── universal/                  # MODELO GENERALIZADO
+│   ├── primitives.ts          # Entity, Agreement, Role
+│   ├── container.ts           # Container primitive + physics
+│   ├── container-manager.ts   # Unified ContainerManager
+│   ├── bootstrap.ts           # System initialization
+│   ├── agreement-types.ts     # 15+ agreement types registry
+│   ├── agreement-hooks-processor.ts # Lifecycle hooks
+│   └── physics-validation.ts  # Physics enforcement
+│
+├── store/                      # PERSISTÊNCIA
+│   ├── event-store.ts         # In-memory EventStore
 │   ├── postgres-event-store.ts # PostgreSQL implementation
-│   └── create-event-store.ts   # Factory
+│   ├── create-event-store.ts  # Factory
+│   ├── event-batcher.ts       # High-frequency batching
+│   ├── snapshots.ts           # Temporal snapshots
+│   ├── projection-cache.ts    # Read model cache
+│   ├── projections-manager.ts # Projection lifecycle
+│   └── postgres-schema.sql    # Database schema
 │
-├── engine/                 # ← EXECUTION
-│   ├── workflow-engine.ts #    State machine executor
-│   └── flow-orchestrator.ts#   Complex process orchestration
+├── aggregates/                 # RECONSTRUÇÃO DE ESTADO
+│   ├── rehydrators.ts         # Event → State functions
+│   ├── wallet-aggregate.ts    # Balance from events
+│   ├── loan-aggregate.ts      # Loan status tracking
+│   └── trajectory-aggregate.ts # Agent action history
 │
-├── aggregates/             # ← STATE RECONSTRUCTION
-│   └── rehydrators.ts     #    Rebuild state from events
+├── api/                        # CAMADA DE INTERFACE
+│   ├── intent-api.ts          # Intent-driven API
+│   ├── http-server.ts         # Express server
+│   ├── query-language.ts      # QueryBuilder
+│   ├── realtime.ts            # WebSocket + SSE
+│   ├── validators.ts          # Input validation
+│   ├── errors.ts              # Error types
+│   ├── intent-handlers/       # Handler implementations
+│   └── intents/
+│       └── agent-economy-intents.ts # 1000+ lines of intents
 │
-├── api/                    # ← INTERFACE LAYER
-│   ├── intent-api.ts      #    Intent-driven API
-│   └── intent-handlers/   #    Intent handler implementations
+├── security/                   # AUTORIZAÇÃO
+│   ├── authorization.ts       # ABAC engine
+│   ├── authentication.ts      # JWT, API keys
+│   ├── policies.ts            # Policy engine
+│   ├── hash-chain.ts          # Cryptographic chain
+│   ├── replay-prevention.ts   # Anti-replay
+│   ├── signatures.ts          # Digital signatures
+│   └── audit-integration.ts   # Security audit
 │
-├── security/               # ← AUTHORIZATION
-│   ├── authorization.ts   #    Agreement-Based Access Control
-│   └── authentication.ts  #    JWT, API keys
+├── economy/                    # SISTEMA ECONÔMICO
+│   ├── fitness.ts             # Multi-dimensional fitness scoring
+│   ├── guardian-scoring.ts    # Guardian reputation + tiers
+│   ├── circuit-breaker.ts     # Market circuit breakers
+│   ├── gatekeeper.ts          # Economic gatekeeper
+│   ├── guarantee-fund.ts      # Stabilization fund
+│   ├── floating-rate.ts       # Dynamic interest rates
+│   ├── macroeconomic-bands.ts # Economic bands
+│   └── health-monitor.ts      # System health
 │
-├── economy/                # ← ECONOMIC SYSTEM (NEW)
-│   ├── fitness.ts         #    Multi-dimensional fitness scoring
-│   └── guardian-scoring.ts#    Guardian reputation & ranking
+├── enforcement/                # DETECÇÃO DE FRAUDE
+│   ├── anomaly-detection.ts   # Statistical outliers (3σ)
+│   ├── cartel-detection.ts    # Graph-based collusion
+│   └── invariants.ts          # Business invariants
 │
-├── enforcement/            # ← SECURITY & DETECTION (NEW)
-│   ├── anomaly-detection.ts#   Statistical outlier detection
-│   └── cartel-detection.ts#    Graph-based collusion detection
+├── sessions/                   # GESTÃO DE SESSÕES
+│   └── session-manager.ts     # Lifecycle + Right to Forget (GDPR)
 │
-├── sessions/               # ← SESSION MANAGEMENT (NEW)
-│   └── session-manager.ts #    Session lifecycle, Right to Forget
+├── governance/                 # GOVERNANÇA
+│   ├── three-branch.ts        # Executive/Legislative/Judicial
+│   ├── monetary-policy.ts     # Taylor Rule, OMOs, lending
+│   └── quadratic-funding.ts   # Public goods funding
 │
-├── governance/             # ← GOVERNANCE SYSTEM (NEW)
-│   ├── three-branch.ts    #    Executive/Legislative/Judicial
-│   ├── monetary-policy.ts #    Taylor Rule, OMOs, lending
-│   └── quadratic-funding.ts#   Public goods funding
+├── interop/                    # INTEROPERABILIDADE
+│   ├── uis-1.0.ts             # Universal Interoperability Standard
+│   └── federated-ledger.ts    # Vector clocks, Merkle trees, sync
 │
-├── interop/                # ← CROSS-REALM (NEW)
-│   ├── uis-1.0.ts         #    Universal Interoperability Standard
-│   └── federated-ledger.ts#    Vector clocks, Merkle trees, sync
+├── benchmarking/               # MÉTRICAS E GAMIFICAÇÃO
+│   ├── benchmark-framework.ts # 5-dimension health scoring
+│   └── achievements.ts        # 30+ achievements, 6 tiers
 │
-├── benchmarking/           # ← METRICS & GAMIFICATION (NEW)
-│   ├── benchmark-framework.ts# Multi-dimensional health scoring
-│   └── achievements.ts    #    Gamification, milestones, rewards
+├── simulation/                 # CHAOS ENGINEERING
+│   ├── chaos-injector.ts      # TIER 1-5 chaos scenarios
+│   ├── scenario-runner-v2.ts  # Multi-year simulation
+│   ├── scenario-runner.ts     # Basic runner
+│   ├── simulation-clock.ts    # Time simulation
+│   ├── market-dynamics.ts     # Market simulation
+│   ├── agent-population.ts    # Agent population
+│   ├── realistic-behaviors.ts # Behavioral models
+│   ├── treasury-fund.ts       # Treasury simulation
+│   ├── guardian-accountability.ts # Guardian penalties
+│   └── health-dashboard.ts    # Real-time health
 │
-├── simulation/             # ← CHAOS ENGINEERING (NEW)
-│   ├── chaos-injector.ts  #    TIER 1-5 chaos scenarios
-│   └── scenario-runner-v2.ts#  Multi-year simulation runner
+├── agent/                      # AGENTE IA
+│   ├── conversation.ts        # Conversation management
+│   ├── api.ts                 # Agent API
+│   ├── primitives.ts          # Agent primitives
+│   ├── rich-interface.ts      # Rich responses
+│   └── messages/              # Message types
 │
-├── trajectory/             # ← AUDIT TRAIL
-│   ├── trace.ts           #    Trace tracking
-│   └── event-store-trace.ts#   AuditLogger
+├── cognition/                  # COGNIÇÃO
+│   └── memory.ts              # Agent memory
 │
-├── observability/          # ← METRICS & LOGGING
-│   ├── logger.ts          #    Structured logging
-│   └── metrics.ts         #    Counters, tracing
+├── consciousness/              # CONSCIÊNCIA
+│   └── continuity.ts          # Provider continuity
 │
-└── index.ts               # ← UNIFIED EXPORTS
-
-antenna/                   # ← HTTP SERVER
-├── server.ts              #    Main HTTP server
-├── admin.ts               #    Admin API
-└── wiring/                #    Dependency injection
-    ├── role-store.ts
-    └── authorization.ts
+├── trajectory/                 # AUDIT TRAIL
+│   ├── trace.ts               # Trace tracking
+│   ├── event-store-trace.ts   # AuditLogger
+│   ├── logger.ts              # Trajectory logger
+│   └── path.ts                # Path utilities
+│
+├── distributed/                # DISTRIBUÍDO
+│   ├── saga.ts                # Saga pattern
+│   ├── saga-coordinator-impl.ts # Coordinator
+│   └── cross-realm-saga.ts    # Cross-realm operations
+│
+├── transactions/               # TRANSAÇÕES
+│   └── intent-transaction.ts  # Saga transactions + compensation
+│
+├── engine/                     # EXECUÇÃO
+│   ├── workflow-engine.ts     # State machine executor
+│   └── flow-orchestrator.ts   # Complex orchestration
+│
+├── scheduling/                 # AGENDAMENTO
+│   ├── scheduler.ts           # Scheduler interface
+│   ├── scheduler-impl.ts      # Implementation
+│   ├── lock.ts                # Distributed locks
+│   └── idempotency.ts         # Idempotency keys
+│
+├── templates/                  # TEMPLATES
+│   ├── registry.ts            # Template registry
+│   └── index.ts               # Exports
+│
+├── adapters/                   # INTEGRAÇÕES EXTERNAS
+│   ├── openai.ts              # OpenAI adapter
+│   ├── anthropic.ts           # Anthropic adapter
+│   ├── postgres.ts            # PostgreSQL adapter
+│   ├── stripe.ts              # Stripe payments
+│   ├── sendgrid.ts            # SendGrid email
+│   ├── slack.ts               # Slack notifications
+│   ├── twilio.ts              # Twilio SMS
+│   ├── auth0.ts               # Auth0 authentication
+│   └── standards/             # Standard adapters
+│
+├── outbound/                   # SAÍDA
+│   └── integrations.ts        # Webhooks, notifications
+│
+├── search/                     # BUSCA
+│   ├── engine.ts              # Search engine
+│   ├── indexer.ts             # Event indexer
+│   └── fake-search-engine.ts  # Test implementation
+│
+├── sandbox/                    # SANDBOX
+│   ├── storage.ts             # Sandbox storage
+│   ├── git-adapter.ts         # Git integration
+│   ├── git-adapters/          # Git providers
+│   └── runtimes/              # Execution runtimes
+│
+├── evolution/                  # EVOLUÇÃO
+│   └── versioning.ts          # Schema versioning
+│
+├── performance/                # PERFORMANCE
+│   └── snapshots.ts           # Snapshot management
+│
+├── attachments/                # ANEXOS
+│   └── documents.ts           # Document management
+│
+├── operational/                # OPERACIONAL
+│   ├── governance.ts          # Rate limits, quotas
+│   ├── governance-evaluator.ts # Policy evaluation
+│   ├── export-service.ts      # Data export
+│   ├── data-retention.ts      # Retention policies
+│   └── rate-limiter-redis.ts  # Redis rate limiter
+│
+├── observability/              # OBSERVABILIDADE
+│   ├── logger.ts              # Structured logging
+│   └── metrics.ts             # Metrics collection
+│
+├── testing/                    # TESTING
+│   └── harness.ts             # Test harness
+│
+├── config/                     # CONFIGURAÇÃO
+│   ├── types.ts               # Config types
+│   └── errors.ts              # Config errors
+│
+└── db/                         # DATABASE
+    ├── connection.ts          # Connection management
+    ├── migrations.ts          # Migration runner
+    ├── validators.ts          # DB validators
+    └── errors.ts              # DB errors
 ```
 
-### Data Flow
+---
+
+## Fluxo de Dados
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              INTENT                                          │
-│   "Transfer 100 credits from Wallet A to Wallet B"                          │
+│   POST /intent { intent: "transfer:credits", payload: { ... } }             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           INTENT API                                         │
+│   1. Validate payload (validators.ts)                                       │
+│   2. Check authorization (ABAC)                                             │
+│   3. Route to handler (intent-handlers/)                                    │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        CONTAINER MANAGER                                     │
-│   1. Get source container (Wallet A)                                        │
-│   2. Get destination container (Wallet B)                                   │
+│   1. Get source container                                                   │
+│   2. Get destination container                                              │
 │   3. Validate physics (Strict → must Move, not Copy)                        │
-│   4. Check authorization                                                    │
+│   4. Execute operation                                                      │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           EVENT STORE                                        │
-│   1. Append: ContainerItemWithdrawn (Wallet A)                              │
-│   2. Append: ContainerItemDeposited (Wallet B)                              │
+│   1. Append: ContainerItemWithdrawn                                         │
+│   2. Append: ContainerItemDeposited                                         │
 │   - hash: sha256(previous + this)                                           │
 │   - aggregateVersion: calculated                                            │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -198,323 +277,221 @@ antenna/                   # ← HTTP SERVER
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## The Container Manager
+---
 
-One service handles all container types:
+## Módulos por Categoria
+
+### 🏛️ Core (Fundação)
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `shared` | 2 | Tipos primitivos universais |
+| `schema` | 6 | Modelo de domínio |
+| `universal` | 7 | Containers, agreements, realms |
+| `store` | 9 | Event sourcing + persistence |
+| `aggregates` | 5 | Reconstrução de estado |
+
+### 🔐 Security
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `security` | 8 | ABAC, policies, crypto |
+| `enforcement` | 3 | Anomaly + cartel detection |
+
+### 💰 Economy
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `economy` | 8 | Fitness, rates, circuit breakers |
+| `governance` | 3 | Three-branch, monetary, quadratic |
+
+### 🌐 Integration
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `interop` | 2 | UIS 1.0, federated ledger |
+| `adapters` | 11 | External services |
+| `outbound` | 2 | Webhooks, notifications |
+
+### 🤖 Agent
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `agent` | 6 | AI conversation |
+| `cognition` | 2 | Memory |
+| `consciousness` | 1 | Continuity |
+
+### 📊 Observability
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `observability` | 3 | Logging, metrics |
+| `trajectory` | 5 | Audit trail |
+| `benchmarking` | 2 | Health metrics, achievements |
+
+### 🔥 Simulation
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `simulation` | 12 | Chaos engineering, scenarios |
+
+### ⚙️ Infrastructure
+| Módulo | Arquivos | Propósito |
+|--------|----------|-----------|
+| `api` | 9 | HTTP, intents, queries |
+| `engine` | 2 | Workflow execution |
+| `distributed` | 4 | Sagas, cross-realm |
+| `transactions` | 1 | Intent transactions |
+| `scheduling` | 5 | Time-based triggers |
+| `sessions` | 1 | Session management |
+
+---
+
+## Tipos de Agreement (15+)
 
 ```typescript
-import { createContainerManager } from './core/universal';
-
-const containers = createContainerManager({ eventStore });
-
-// Create containers with different physics
-const wallet = await containers.createWallet('My Wallet', actor, realmId);
-const workspace = await containers.createWorkspace('Dev', actor, realmId);
-const realm = await containers.createRealm('Tenant A', actor, parentRealmId);
-
-// Universal operations
-await containers.deposit(wallet.id, { id: creditId, type: 'Asset', quantity: { amount: 100, unit: 'USD' } }, actor);
-await containers.transfer(walletA, walletB, creditId, { amount: 50, unit: 'USD' }, actor);
-
-// High-level convenience
-await containers.pay(fromWallet, toWallet, 100, 'USD', actor);
-await containers.deploy(fileId, devWorkspace, prodWorkspace, actor);
+// core/universal/agreement-types.ts
+const AGREEMENT_TYPES = {
+  // Core
+  EMPLOYMENT_TYPE,
+  SERVICE_TYPE,
+  SALE_TYPE,
+  LEASE_TYPE,
+  LICENSE_TYPE,
+  
+  // Agent Economy
+  GUARDIANSHIP_TYPE,
+  STARTER_LOAN_TYPE,
+  WATCHER_SUBSCRIPTION_TYPE,
+  DAEMON_BUDGET_TYPE,
+  
+  // Governance
+  MEMBERSHIP_TYPE,
+  AUTHORIZATION_TYPE,
+  TESTIMONY_TYPE,
+  
+  // Sessions
+  SESSION_TYPE,
+  
+  // Custom
+  CUSTOM_TYPE,
+};
 ```
 
-## Bootstrap
+---
 
-The system initializes with:
+## Chaos Scenarios (TIER 1-5)
 
 ```typescript
-import { bootstrap, PRIMORDIAL_REALM_ID } from './core/universal';
+// core/simulation/chaos-injector.ts
+TIER 1: Basic Disruptions
+  - MODEL_RELEASE (GPT-5 drops)
+  - MARKET_CRASH (60% demand drop)
+  - CARTEL_FORMATION
+  - TREASURY_BUG
+  - MASS_DEFAULT
 
-// Creates:
-// 1. Genesis Agreement
-// 2. System Entity
-// 3. Primordial Realm (root Container)
-const { primordialRealm, systemEntityId, genesisAgreementId } = await bootstrap(eventStore);
+TIER 2: Cascading Failures
+  - FLASH_CRASH (80% in 1 day)
+  - BANK_RUN (90% withdrawal)
+  - CREDIT_FREEZE
+  - CONTAGION_PANIC
+
+TIER 3: Existential Risks
+  - AGI_SINGULARITY (99% obsolescence)
+  - DEFLATION_TRAP
+
+TIER 5: Systemic Collapse
+  - COMMONS_COLLAPSE
+  - CARTEL_TAKEOVER (80% control)
+  - HYPERINFLATION (1000%)
+  - GOVERNANCE_DEADLOCK
 ```
 
-## Key Features
+---
 
-### 1. Temporal Queries
-
-Query the state of any entity at any point in time:
+## Benchmark Dimensions
 
 ```typescript
-QueryBuilder
-  .roles()
-  .where('holderId', 'eq', 'joao-123')
-  .at(new Date('2024-01-01').getTime())
-  .include('establishingAgreement')
-  .build();
-```
-
-### 2. Intent-Driven API
-
-Express what you want to achieve:
-
-```typescript
-// Intent-driven
-POST /intent { intent: "transfer", payload: { from, to, asset, quantity } }
-```
-
-### 3. Affordances
-
-The API tells you what you can do next:
-
-```json
-{
-  "affordances": [
-    { "intent": "consent", "description": "Accept this agreement" },
-    { "intent": "reject", "description": "Decline this agreement" }
-  ]
+// core/benchmarking/benchmark-framework.ts
+dimensions: {
+  survival: 0.25,    // Agent survival rate
+  equality: 0.20,    // Gini coefficient
+  resilience: 0.25,  // Recovery time
+  efficiency: 0.15,  // Resource utilization
+  innovation: 0.15,  // Adaptation rate
 }
-```
 
-### 4. Multitenancy via Containers
-
-Realms are Containers with Realm physics:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          PRIMORDIAL REALM                                    │
-│                     (Container with Realm physics)                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│   ┌───────────┐        License Agreement         ┌───────────┐             │
-│   │  SYSTEM   │════════════════════════════════▶│  TENANT   │             │
-│   │  (Entity) │                                  │  (Entity) │             │
-│   └───────────┘                                  └───────────┘             │
-│                                                        │                    │
-│                                                        ▼                    │
-│                                            ┌────────────────────────┐      │
-│                                            │    TENANT REALM        │      │
-│                                            │    (Container)         │      │
-│                                            │                        │      │
-│                                            │  Contains:             │      │
-│                                            │  • Entities            │      │
-│                                            │  • Agreements          │      │
-│                                            │  • Wallets             │      │
-│                                            │  • Workspaces          │      │
-│                                            └────────────────────────┘      │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-## Shared Foundation
-
-All modules use common primitives from `core/shared/`:
-
-| Type | Purpose | Example |
-|------|---------|---------|
-| `EntityId` | Time-ordered unique identifier | `"ent-m5x2k-f8g3h9"` |
-| `Timestamp` | Unix epoch milliseconds | `1701532800000` |
-| `Duration` | Time span with unit | `{ amount: 7, unit: 'days' }` |
-| `Validity` | Effective period | `{ effectiveFrom, effectiveUntil }` |
-| `ActorReference` | Who performed action | `{ type: 'Entity', entityId: '...' }` |
-
-## Quick Start
-
-```typescript
-import { createUniversalLedger, bootstrap, createContainerManager } from './core';
-
-// Create event store
-const { eventStore } = createUniversalLedger();
-
-// Bootstrap the system
-await bootstrap(eventStore);
-
-// Create container manager
-const containers = createContainerManager({ eventStore });
-
-// Create a wallet
-const wallet = await containers.createWallet('My Wallet', actor, PRIMORDIAL_REALM_ID);
-
-// Deposit credits
-await containers.deposit(wallet.id, { 
-  id: 'credit-usd', 
-  type: 'Asset', 
-  quantity: { amount: 1000, unit: 'USD' } 
-}, actor);
-```
-
-## Production Deployment
-
-1. **PostgreSQL Event Store** - Set `DATABASE_URL`
-2. **Bootstrap** - Run `bootstrap(eventStore)` on startup
-3. **Container Manager** - Use for all container operations
-4. **Realm Setup** - Create tenant realms via `containers.createRealm()`
-
----
-
-## Advanced Features
-
-### Three-Branch Governance
-
-```typescript
-import { createGovernanceCoordinator } from './core/governance/three-branch';
-
-const governance = createGovernanceCoordinator();
-
-// Executive action
-const action = governance.proposeAction('policy-change', { ... }, executorId);
-
-// Legislative proposal
-const proposal = governance.submitProposal('new-law', 'Description', proposerId);
-governance.castVote(proposal.id, voterId, 'For');
-
-// Judicial review
-const ruling = governance.fileCase('constitutional-challenge', caseDetails, plaintiffId);
-```
-
-### Monetary Policy (Taylor Rule)
-
-```typescript
-import { createMonetaryPolicyEngine } from './core/governance/monetary-policy';
-
-const centralBank = createMonetaryPolicyEngine({
-  targetInflation: 0.02,
-  naturalRate: 0.025,
-});
-
-// Get optimal rate based on economic indicators
-const rate = centralBank.calculateTaylorRate({
-  inflation: 0.03,
-  outputGap: 0.01,
-  unemployment: 0.04,
-  // ...
-});
-
-// Execute open market operations
-centralBank.executeOMO('Buy', 'Bond', 1000000n, 98.5);
-```
-
-### Quadratic Funding for Public Goods
-
-```typescript
-import { createQuadraticFundingEngine } from './core/governance/quadratic-funding';
-
-const qf = createQuadraticFundingEngine({ matchingPool: 100000n });
-
-// Create funding round
-const round = qf.createRound('Q1 2024', 'First quarter funding');
-
-// Submit project
-const project = qf.submitProject(round.id, 'Open Source Library', 'Description', ownerId);
-
-// Contributions (quadratic formula amplifies small donations)
-qf.contribute(project.id, donor1, 10n);  // √10 = 3.16
-qf.contribute(project.id, donor2, 10n);  // √10 = 3.16
-// Total: (3.16 + 3.16)² = 40 matched vs 20 direct
-
-// Calculate results
-const results = qf.calculateFunding(round.id);
-```
-
-### Cross-Realm Interoperability (UIS 1.0)
-
-```typescript
-import { createUISGateway } from './core/interop/uis-1.0';
-
-const gateway = createUISGateway({ realmId: myRealmId });
-
-// Establish trust
-gateway.establishTrust({
-  realmId: partnerRealmId,
-  trustLevel: 'Verified',
-  capabilities: ['EntityTransfer', 'AssetTransfer'],
-});
-
-// Transfer entity to another realm
-const transfer = gateway.initiateEntityTransfer(
-  partnerRealmId,
-  entityId,
-  'Agent',
-  entityData,
-  'Migration'
-);
-```
-
-### Federated Ledger (Vector Clocks)
-
-```typescript
-import { createFederatedLedger } from './core/interop/federated-ledger';
-
-const ledger = createFederatedLedger({
-  realmId: myRealmId,
-  conflictStrategy: 'LastWriteWins',
-});
-
-// Append local event
-ledger.appendLocal(event);
-
-// Sync with remote realm
-const request = ledger.createSyncRequest(remoteRealmId);
-const response = await sendToRemote(request);
-ledger.applySyncResponse(response, remoteRealmId);
-```
-
-### Benchmarking & Health Metrics
-
-```typescript
-import { createBenchmarkEngine } from './core/benchmarking/benchmark-framework';
-
-const benchmark = createBenchmarkEngine();
-
-const score = benchmark.calculate({
-  // Survival metrics
-  totalAgents: 100,
-  activeAgents: 90,
-  // Equality metrics
-  giniCoefficient: 0.3,
-  // Resilience metrics
-  recoveryTime: 5,
-  systemUptime: 0.99,
-  // ...
-});
-
-console.log(score.composite);  // 0-100
-console.log(score.status);     // 'Healthy' | 'Warning' | 'Critical'
-```
-
-### Achievements & Gamification
-
-```typescript
-import { createAchievementEngine } from './core/benchmarking/achievements';
-
-const achievements = createAchievementEngine();
-
-// Check progress for entity
-const unlocked = achievements.checkProgress(entityId, {
-  days_active: 30,
-  total_earned: 1000,
-  connections: 10,
-});
-
-// Get leaderboard
-const leaderboard = achievements.getLeaderboard(10);
-```
-
-### Chaos Engineering & Simulation
-
-```typescript
-import { CHAOS_SCENARIOS } from './core/simulation/chaos-injector';
-import { ENHANCED_SCENARIOS } from './core/simulation/scenario-runner-v2';
-
-// Available scenarios:
-// TIER 1: MODEL_RELEASE, MARKET_CRASH, CARTEL_FORMATION
-// TIER 2: FLASH_CRASH, BANK_RUN, CREDIT_FREEZE
-// TIER 3: AGI_SINGULARITY, DEFLATION_TRAP
-// TIER 5: COMMONS_COLLAPSE, CARTEL_TAKEOVER, HYPERINFLATION
-
-// Run multi-year simulation
-const scenario = ENHANCED_SCENARIOS.REALISTIC_APOCALYPSE;
-// 5 years with cascading chaos events
+status: 'Healthy' | 'Warning' | 'Critical'
 ```
 
 ---
 
-*"The difference between a Wallet and a Workspace is not in the code. It's in the Agreement."*
+## Achievement Tiers
 
-*"One ContainerManager. One transfer() method. All use cases."*
+```typescript
+// core/benchmarking/achievements.ts
+tiers: Bronze → Silver → Gold → Platinum → Diamond → Legendary
+
+categories: [
+  'Survival',    // first-day, survivor-week, immortal
+  'Economic',    // first-credit, millionaire, debt-free
+  'Social',      // networker, influencer, philanthropist
+  'Resilience',  // comeback-kid, antifragile
+  'Innovation',  // experimenter, visionary
+  'Special',     // genesis, completionist (hidden)
+]
+
+total: 30+ achievements
+```
+
+---
+
+## Governance Model
+
+```typescript
+// core/governance/three-branch.ts
+Executive:
+  - proposeAction()
+  - executeAction()
+  - vetoProposal()
+
+Legislative:
+  - submitProposal()
+  - castVote()
+  - tallyVotes()
+  - overrideVeto()
+
+Judicial:
+  - fileCase()
+  - issueRuling()
+  - appeal()
+```
+
+---
+
+## Cross-Realm Protocol (UIS 1.0)
+
+```typescript
+// core/interop/uis-1.0.ts
+Trust Levels: Full | Verified | Limited | Untrusted
+
+Capabilities:
+  - EntityTransfer
+  - AssetTransfer
+  - CreditTransfer
+  - MessageRelay
+
+// core/interop/federated-ledger.ts
+Sync: Vector clocks + Merkle trees
+Conflict: LastWriteWins | FirstWriteWins | SourcePriority | Manual
+```
+
+---
+
+## Estatísticas
+
+| Métrica | Valor |
+|---------|-------|
+| **Arquivos TypeScript** | 174 |
+| **Módulos (pastas)** | 42 |
+| **Testes** | 551 |
+| **Testes passando** | 541 (98.2%) |
+| **Linhas de código** | ~50,000+ |
+
+---
+
+*"The ledger doesn't model business. The ledger **is** business—formalized."*

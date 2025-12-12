@@ -2,357 +2,234 @@
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
   <img src="https://img.shields.io/badge/Event_Sourcing-FF6B6B?style=for-the-badge" alt="Event Sourcing"/>
-  <img src="https://img.shields.io/badge/MIT-green?style=for-the-badge" alt="MIT License"/>
+  <img src="https://img.shields.io/badge/174_Files-green?style=for-the-badge" alt="174 Files"/>
+  <img src="https://img.shields.io/badge/551_Tests-blue?style=for-the-badge" alt="551 Tests"/>
 </p>
 
-<h1 align="center">
-  📜 Universal Business Ledger
-</h1>
+<h1 align="center">📜 Universal Business Ledger</h1>
 
 <p align="center">
-  <strong>A universal, append-only event-sourced ledger for modeling any business domain.</strong>
+  <strong>Sistema operacional para negócios baseado em event sourcing.</strong>
 </p>
 
 <p align="center">
-  <em>"Agreements are the force that binds entities together.<br/>Without them, there are no relationships—only isolated atoms."</em>
+  <em>"Todo relacionamento é um Agreement. Toda fronteira é um Container."</em>
 </p>
 
-> **📖 IMPORTANT:** This README is a quick overview. For the complete philosophical foundation and architecture, see:
-> - **[PHILOSOPHY.md](./PHILOSOPHY.md)** - The core philosophy: "Every relationship is an Agreement"
-> - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture and design
+---
+
+## O Que É
+
+UBL é um **ledger universal** que pode modelar qualquer domínio de negócio:
+
+- **174 arquivos TypeScript** em 42 módulos
+- **551 testes** (98.2% passando)
+- **Event sourcing** com hash chain criptográfico
+- **Agreement-first** - todo relacionamento é um contrato
 
 ---
 
-## The Core Insight
+## Módulos Principais
 
-> **Every relationship is an Agreement.**
+### 🏛️ Core
+| Módulo | Propósito |
+|--------|-----------|
+| `core/universal/` | Containers, Agreements, Realms |
+| `core/store/` | Event Store (PostgreSQL + In-memory) |
+| `core/schema/` | Domain model (Entity, Asset, Agreement) |
+| `core/aggregates/` | State reconstruction |
+| `core/api/` | Intent-driven API |
 
-This isn't a design pattern. It's the physics of business.
+### 💰 Economy
+| Módulo | Propósito |
+|--------|-----------|
+| `core/economy/` | Fitness scoring, circuit breakers, rates |
+| `core/governance/` | Three-branch, monetary policy, quadratic funding |
 
-| Traditional Model | Universal Model |
-|-------------------|-----------------|
-| John IS an Employee | John HOLDS Employee role VIA Employment Agreement |
-| Mary IS a Customer | Mary HOLDS Customer role VIA Purchase Agreement |
-| Car #123 IS owned by Bob | Car #123 IS owned by Bob VIA Sale Agreement |
+### 🔐 Security
+| Módulo | Propósito |
+|--------|-----------|
+| `core/security/` | ABAC, policies, crypto, signatures |
+| `core/enforcement/` | Anomaly detection, cartel detection |
 
-**Roles are not attributes. They are relationships.**
+### 🌐 Integration
+| Módulo | Propósito |
+|--------|-----------|
+| `core/interop/` | UIS 1.0, federated ledger |
+| `core/adapters/` | OpenAI, Stripe, Slack, etc. |
 
----
+### 🤖 Agent
+| Módulo | Propósito |
+|--------|-----------|
+| `core/agent/` | AI conversation |
+| `core/sessions/` | Session management + GDPR |
 
-## ✨ Features
-
-### Foundation
-- **📜 Event Sourcing** — Immutable facts linked by cryptographic hash chain
-- **🤝 Agreement-First** — All relationships established through explicit agreements
-- **⏰ Temporal** — Query any state at any point in time
-- **🔐 Auditable** — Complete traceable history, tamper-evident
-
-### Domain Model
-- **Entity** — Anything that can participate in agreements
-- **Asset** — Anything that can be owned, transferred, or valued
-- **Agreement** — The universal primitive for relationships
-- **Role** — Relationships derived from agreements, not static attributes
-- **Realm** — Isolated multi-tenant universes (also established by agreements!)
-
-### Interface
-- **Intent-Driven API** — Express what you want (`hire`, `sell`, `transfer`) not endpoints
-- **Affordances** — API tells you what you can do next (HATEOAS++)
-- **Real-time** — WebSocket & SSE streaming
-- **Natural Language** — AI-powered Agent API for conversational interaction
-
-### Security
-- **Agreement-Based Access Control (ABAC)** — Every permission traceable to its source
-- **Policy Engine** — Flexible rules that can override role decisions
-- **Security as Memory** — Authorization decisions are part of the audit trail
-
-### Advanced Systems
-- **🏛️ Three-Branch Governance** — Executive, Legislative, Judicial separation
-- **💰 Monetary Policy** — Taylor Rule, open market operations, lending facilities
-- **🌱 Quadratic Funding** — Democratic public goods funding
-- **🌐 Cross-Realm** — UIS 1.0 protocol, federated ledger with vector clocks
-- **📊 Benchmarking** — 5-dimension health scoring (Survival, Equality, Resilience...)
-- **🏆 Achievements** — 30+ achievements, 6 tiers, gamification
-- **🔥 Chaos Engineering** — TIER 1-5 scenarios, multi-year simulations
-
-### Production Ready
-- **Snapshots & Projections** — Performance optimizations for scale
-- **Sagas** — Distributed transactions with compensation
-- **Scheduling** — Time-based triggers, deadlines, reminders
-- **Webhooks & Notifications** — External integrations
-- **Rate Limits & Quotas** — Operational governance
-- **Data Export & Archival** — GDPR compliance, cold storage
+### 📊 Observability
+| Módulo | Propósito |
+|--------|-----------|
+| `core/benchmarking/` | Health metrics, achievements |
+| `core/simulation/` | Chaos engineering (TIER 1-5) |
 
 ---
 
-## 🚀 Quickstart para Novos Tenants
-
-### Criar seu Realm e receber credenciais
+## Quick Start
 
 ```bash
-POST /intent
-{
-  "intent": "createRealm",
-  "payload": {
-    "name": "Minha Empresa"
-  }
-}
-```
+# Clone
+git clone https://github.com/danvoulez/UBL.git
+cd UBL
 
-**Resposta inclui:**
-- ✅ `realmId` - ID do seu realm
-- ✅ `apiKey` - Chave API para autenticação
-- ✅ `entityId` - ID da entidade sistema
-
-📚 **Guia completo**: Veja `docs/TENANT_ONBOARDING_GUIDE.md`
-
----
-
-## 🏗️ Architecture
-
-```
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                          UNIVERSAL LEDGER SYSTEM                               ║
-╠═══════════════════════════════════════════════════════════════════════════════╣
-║                                                                               ║
-║   Events ───▶ Agreements ───▶ Roles ───▶ Permissions ───▶ Actions            ║
-║     │             │             │             │               │               ║
-║     ▼             ▼             ▼             ▼               ▼               ║
-║  IMMUTABLE    UNIVERSAL     TRACEABLE    CONTEXTUAL      AUDITED             ║
-║   FACTS       CONTRACTS    RELATIONSHIPS  SECURITY       MEMORY              ║
-║                                                                               ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
-```
-
-```
-core/
-├── shared/          # Universal primitives (EntityId, Timestamp, Duration...)
-├── schema/          # Domain model (Event, Party, Asset, Agreement, Role)
-├── universal/       # Generalized model with realms
-├── store/           # Event persistence (in-memory + PostgreSQL)
-├── engine/          # Workflow & flow execution
-├── aggregates/      # State reconstruction from events
-├── api/             # Intent API, queries, HTTP, real-time
-├── security/        # Authorization, policies, audit
-├── economy/         # 🆕 Fitness scoring, guardian reputation
-├── enforcement/     # 🆕 Anomaly detection, cartel detection
-├── sessions/        # 🆕 Session lifecycle, Right to Forget
-├── governance/      # 🆕 Three-branch, monetary policy, quadratic funding
-├── interop/         # 🆕 UIS 1.0, federated ledger, cross-realm
-├── benchmarking/    # 🆕 Health metrics, achievements, gamification
-├── simulation/      # 🆕 Chaos engineering, scenario runner
-├── memory/          # Narrative logging, stories
-├── agent/           # AI-powered natural language interface
-├── evolution/       # Schema versioning, upcasting, migrations
-├── performance/     # Snapshots, projections, caching
-├── distributed/     # Sagas, cross-realm, conflict resolution
-├── scheduling/      # Time-based triggers, deadlines
-├── observability/   # Metrics, tracing, health
-├── operational/     # Rate limits, quotas, export, archival
-└── testing/         # Time-travel, fixtures, property tests
-```
-
----
-
-## 🚀 Quick Start
-
-```typescript
-import { createUniversalLedger, Ids } from './core';
-
-// Bootstrap the system
-const ledger = createUniversalLedger();
-
-// Create an employment relationship
-const companyId = Ids.entity();
-const employeeId = Ids.entity();
-const agreementId = Ids.agreement();
-
-// Record events (immutable facts)
-await ledger.eventStore.append({
-  type: 'EntityCreated',
-  aggregateType: 'Entity',
-  aggregateId: companyId,
-  payload: { 
-    entityType: 'Organization', 
-    identity: { name: 'Acme Corp' } 
-  }
-});
-
-await ledger.eventStore.append({
-  type: 'EntityCreated',
-  aggregateType: 'Entity',
-  aggregateId: employeeId,
-  payload: { 
-    entityType: 'Person', 
-    identity: { name: 'João Silva' } 
-  }
-});
-
-await ledger.eventStore.append({
-  type: 'AgreementProposed',
-  aggregateType: 'Agreement',
-  aggregateId: agreementId,
-  payload: {
-    agreementType: 'Employment',
-    parties: [
-      { entityId: companyId, role: 'Employer' },
-      { entityId: employeeId, role: 'Employee' }
-    ],
-    terms: { 
-      description: 'Employment of João as Software Engineer',
-      clauses: [
-        { type: 'Compensation', content: 'Annual salary of $100,000' }
-      ]
-    }
-  }
-});
-
-// Query at any point in time
-const state = await ledger.temporal.getAgreementAt(agreementId, Date.now());
-```
-
----
-
-## 💡 Use Cases
-
-### E-Commerce
-```
-Entities: Store, Customers, Suppliers
-Agreements: Purchase, Return, Supplier Contract
-Assets: Products, Inventory
-Workflows: Sale, Return, Fulfillment
-```
-
-### Healthcare
-```
-Entities: Hospital, Doctors, Patients, Insurance
-Agreements: Employment, Care Agreement, Insurance Contract
-Assets: Medical Records, Equipment
-Workflows: Admission, Treatment, Discharge
-```
-
-### Legal/Notary
-```
-Entities: Notary, Parties, Witnesses
-Agreements: Notarization Request, Contracts, Testimony
-Assets: Documents, Seals
-Workflows: Verification, Notarization
-```
-
-### HR/Workforce
-```
-Entities: Company, Employees, Contractors
-Agreements: Employment, Contractor, NDA
-Assets: Equipment, Credentials
-Workflows: Hire, Onboard, Offboard
-```
-
-**The same primitives model ANY domain.**
-
----
-
-## 🔧 Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/danvoulez/Universal-Business-Ledger.git
-cd Universal-Business-Ledger
-
-# Install dependencies
+# Install
 npm install
+
+# Test
+npm test
 
 # Build
 npm run build
-
-# Run development
-npm run dev
 ```
 
-### Requirements
-- Node.js >= 18.0.0
-- TypeScript 5.3+
-- PostgreSQL (for production)
-
 ---
 
-## 📚 Documentation
+## Exemplo: Transfer de Créditos
 
-### Core Documents (Start Here)
-| Document | Description |
-|----------|-------------|
-| **[PHILOSOPHY.md](./PHILOSOPHY.md)** | ⭐ **The philosophical foundation** - "Every relationship is an Agreement" |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | ⭐ **Complete system architecture** - Design, modules, data flow |
+```typescript
+import { createContainerManager } from './core/universal';
 
-### Additional Documentation
-| Document | Description |
-|----------|-------------|
-| [IMPLEMENTATION.md](./IMPLEMENTATION.md) | Technical X-ray - how it actually works |
-| [ROADMAP.md](./ROADMAP.md) | Project status and progress |
-| [CHANGELOG.md](./CHANGELOG.md) | Version history |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines |
-| [SETUP-LOCAL.md](./SETUP-LOCAL.md) | Local development setup |
-| [docs/API-REFERENCE.md](./docs/API-REFERENCE.md) | Complete API reference |
+const containers = createContainerManager({ eventStore });
 
----
+// Criar wallets
+const walletA = await containers.createWallet('Alice', actor, realmId);
+const walletB = await containers.createWallet('Bob', actor, realmId);
 
-## 🎓 Getting Started
+// Depositar
+await containers.deposit(walletA.id, { 
+  id: 'credit-1', 
+  type: 'Asset', 
+  quantity: { amount: 1000, unit: 'UBL' } 
+}, actor);
 
-### 1. Understand the Philosophy
-Read [PHILOSOPHY.md](./PHILOSOPHY.md) to understand:
-- Why every relationship is an Agreement
-- How Containers provide governance boundaries
-- The fractal nature of the system
-
-### 2. Run Tests
-```bash
-npm install
-npm test
+// Transferir
+await containers.transfer(walletA.id, walletB.id, 'credit-1', { amount: 100, unit: 'UBL' }, actor);
 ```
 
-### 3. Explore the Code
-- `core/universal/` - Container primitive, agreements, realms
-- `core/governance/` - Three-branch, monetary policy, quadratic funding
-- `core/interop/` - Cross-realm communication
-- `core/benchmarking/` - Health metrics and achievements
+---
 
-### 4. Read the API Reference
-See [docs/API-REFERENCE.md](./docs/API-REFERENCE.md) for complete API documentation.
+## Exemplo: Governance
+
+```typescript
+import { createGovernanceCoordinator } from './core/governance/three-branch';
+
+const gov = createGovernanceCoordinator();
+
+// Proposta legislativa
+const proposal = gov.submitProposal('new-policy', 'Description', proposerId);
+
+// Votação
+gov.castVote(proposal.id, voter1, 'For');
+gov.castVote(proposal.id, voter2, 'For');
+gov.castVote(proposal.id, voter3, 'Against');
+
+// Resultado
+const result = gov.tallyVotes(proposal.id);
+// { for: 2, against: 1, abstain: 0, passed: true }
+```
 
 ---
 
-## 🤝 Contributing
+## Exemplo: Benchmarking
 
-This is a conceptual architecture ready for real-world implementation. Contributions welcome!
+```typescript
+import { createBenchmarkEngine } from './core/benchmarking/benchmark-framework';
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+const benchmark = createBenchmarkEngine();
+
+const score = benchmark.calculate({
+  totalAgents: 100,
+  activeAgents: 90,
+  giniCoefficient: 0.3,
+  recoveryTime: 5,
+  // ...
+});
+
+console.log(score.composite);  // 0-100
+console.log(score.status);     // 'Healthy' | 'Warning' | 'Critical'
+```
 
 ---
 
-## 📄 License
+## Documentação
 
-MIT License - see [LICENSE](./LICENSE) for details.
+| Documento | Descrição |
+|-----------|-----------|
+| [PHILOSOPHY.md](./PHILOSOPHY.md) | Fundação filosófica |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Estrutura completa (42 módulos) |
+| [IMPLEMENTATION.md](./IMPLEMENTATION.md) | X-ray técnico |
+| [ROADMAP.md](./ROADMAP.md) | Status do projeto |
+| [CHANGELOG.md](./CHANGELOG.md) | Histórico de versões |
+| [docs/API-REFERENCE.md](./docs/API-REFERENCE.md) | Referência da API |
 
 ---
 
-## 🌟 The Vision
+## Estatísticas
 
-> *"The ledger doesn't model business. The ledger **is** business—formalized."*
+| Métrica | Valor |
+|---------|-------|
+| **Arquivos TypeScript** | 174 |
+| **Módulos** | 42 |
+| **Testes** | 551 |
+| **Passando** | 541 (98.2%) |
+| **Agreement Types** | 15+ |
+| **Chaos Scenarios** | TIER 1-5 |
+| **Achievements** | 30+ |
 
-This system captures the fundamental nature of how business actually works:
-- All relationships require consent (agreements)
-- The past is immutable (events)
-- Every action is attributable (actors)
-- Every permission is traceable (roles → agreements)
-- The system remembers its own story (memory)
+---
 
-**Built with ❤️ for a more transparent, auditable, and trustworthy world.**
+## Features Avançadas
+
+### 🏛️ Three-Branch Governance
+- Executive, Legislative, Judicial
+- Veto e override
+- Checks and balances
+
+### 💰 Monetary Policy
+- Taylor Rule
+- Open Market Operations
+- Lending facilities
+
+### 🌱 Quadratic Funding
+- Public goods funding
+- Democratic matching
+- Sybil resistance
+
+### 🌐 Cross-Realm (UIS 1.0)
+- Trust levels
+- Entity/Asset/Credit transfers
+- Federated ledger sync
+
+### 📊 Benchmarking
+- 5 dimensions: Survival, Equality, Resilience, Efficiency, Innovation
+- Health status tracking
+- Trend analysis
+
+### 🏆 Achievements
+- 30+ achievements
+- 6 tiers: Bronze → Legendary
+- Leaderboards
+
+### 🔥 Chaos Engineering
+- TIER 1: Market crash, cartel formation
+- TIER 3: AGI singularity, deflation trap
+- TIER 5: Systemic collapse, hyperinflation
+
+---
+
+## License
+
+MIT License - see [LICENSE](./LICENSE)
 
 ---
 
 <p align="center">
-  <sub>In the beginning was the Agreement, and the Agreement was with the Ledger,<br/>and the Agreement was the foundation of all relationships.</sub>
+  <em>"The ledger doesn't model business. The ledger <strong>is</strong> business—formalized."</em>
 </p>
-
