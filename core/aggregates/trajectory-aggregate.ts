@@ -161,6 +161,11 @@ export class TrajectoryAggregate {
     return this.state.totalCost;
   }
   
+  getAverageCost(): bigint {
+    if (this.state.totalSpans === 0) return 0n;
+    return this.state.totalCost / BigInt(this.state.totalSpans);
+  }
+  
   getAverageDuration(): number {
     if (this.state.totalSpans === 0) return 0;
     return this.state.totalDurationMs / this.state.totalSpans;
