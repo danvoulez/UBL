@@ -689,123 +689,146 @@
 
 ---
 
-## 🏗️ FOUNDATION FIRST - Prioridades Reorganizadas
+## 🏗️ ROADMAP CONSOLIDADO
 
 > **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
+> 
+> **Progresso:** 93 tarefas feitas / 84 pendentes (53%)
+> **Testes:** 414 passando
 
 ---
 
-### ✅ FASE 0: COMPLETO
-1. ✅ Agent Economy Core (Fase 1-4)
-2. ✅ Simulation Framework v1 + v2 + Sprints 1-8
-3. ✅ MEGA SPRINT: Aggregates, Health Dashboard, Guardian Accountability, Physics Validation, Continuity
+### ✅ SPRINT A: FOUNDAÇÃO - COMPLETO
+> Tudo que foi construído até agora
+
+**A.1 Agent Economy Core** ✅
+- [x] Schema: Entity, Guardian, Constitution, Wallet, Loan, Trajectory
+- [x] Events: EntityRegistered, GuardianAssigned, WalletCreated, etc.
+- [x] Intents: register:agent, transfer:credits, record:trajectory
+- [x] Aggregates: WalletAggregate, LoanAggregate, TrajectoryAggregate
+
+**A.2 Perception Layer** ✅
+- [x] Watcher + ShadowEntity schemas
+- [x] Events: WatcherCreated, ShadowEntityCreated, etc.
+- [x] Intents: create:watcher, register:shadow, promote:shadow
+
+**A.3 Consciousness Layer** ✅
+- [x] Daemon schema + events
+- [x] Provider pooling, memory hydration, context injection
+
+**A.4 Simulation Framework** ✅
+- [x] 8 cenários testados, ~100k scripts simulados
+- [x] Circuit breakers, Treasury Fund, Guardian Accountability
+- [x] Health Dashboard
 
 ---
 
-### ✅ FASE 1: CONFIANÇA (Testes + Security) - COMPLETO
-> "Não crescer sem saber que o que temos funciona"
+### ✅ SPRINT B: SEGURANÇA + TESTES - COMPLETO
+> Confiança no que temos
 
-**1.1 Testes Críticos** ✅
-- [x] � `tests/business/agent-economy/registration.test.ts`
-- [x] � `tests/business/agent-economy/wallet.test.ts`
-- [x] � `tests/foundation/attacks/agent-impersonation.test.ts`
+**B.1 Security Hardening** ✅
+- [x] Event replay attack prevention
+- [x] Hash chain for TrajectorySpan
+- [x] Cryptographic signatures
+- [x] Physics validation
 
-**1.2 Security Hardening** ✅
-- [x] � Event replay attack prevention (`core/security/replay-prevention.ts`)
-- [x] � Hash chain for TrajectorySpan (`core/security/hash-chain.ts`)
-- [x] � Cryptographic signatures (`core/security/signatures.ts`)
-
----
-
-### ✅ FASE 2: INTEGRIDADE (Technical Debt) - COMPLETO
-> "Corrigir o que está hardcoded ou incompleto"
-
-**2.1 Event Store** ✅
-- [x] � Add `query()` method to EventStore for filtering
-- [x] � Proper aggregate versioning (`getNextVersion()`)
-
-**2.2 Transactions** ✅
-- [x] � IntentTransaction interface with compensation steps
-- [x] � Saga pattern with automatic rollback
-- [x] � Correlation ID em eventos relacionados (audit trail)
-
-**2.3 Testes Restantes** ✅
-- [x] 🟢 `tests/business/agent-economy/loans.test.ts`
-- [x] 🟢 `tests/business/agent-economy/trajectory.test.ts`
-- [x] � `tests/business/perception/watcher-lifecycle.test.ts`
-- [x] � `tests/business/perception/shadow-graph.test.ts`
-
-**2.4 Economic Gatekeeper** ✅
-> Separação de concerns: Physics (Container) vs Policy (Economy)
-- [x] � `core/economy/gatekeeper.ts` - Middleware para transfers
-- [x] � Interface `ICircuitBreaker` e `ITreasury` (loose coupling)
-- [x] � `assessTransfer()` - Calcula fees antes de executar
+**B.2 Testes Críticos** ✅
+- [x] registration.test.ts, wallet.test.ts
+- [x] loans.test.ts, trajectory.test.ts
+- [x] watcher-lifecycle.test.ts, shadow-graph.test.ts
+- [x] agent-impersonation.test.ts
 
 ---
 
-### ✅ FASE 3: ESCALA (Performance) - COMPLETO
-> "Preparar para crescer"
+### ✅ SPRINT C: INTEGRIDADE + ESCALA - COMPLETO
+> Technical debt + performance
 
-**3.1 Event Store Performance** ✅
-- [x] 🟢 Event batching for micro-payments, telemetry (`core/store/event-batcher.ts`)
-- [x] 🟢 Temporal snapshots every 1000 events or 24h (`core/store/snapshots.ts`)
-- [x] 🟢 Projection cache (`core/store/projection-cache.ts`)
+**C.1 Event Store** ✅
+- [x] `query()` method with filtering
+- [x] `getNextVersion()` for aggregate versioning
+- [x] Event batching (`event-batcher.ts`)
+- [x] Temporal snapshots (`snapshots.ts`)
+- [x] Projection cache (`projection-cache.ts`)
 
-**3.2 Read Performance** ✅
-- [x] 🟢 LRU cache for projections
-- [x] 🟢 TTL-based expiration + invalidation
+**C.2 Transactions** ✅
+- [x] IntentTransaction with Saga pattern
+- [x] Compensation steps for rollback
+- [x] Correlation ID for audit trail
+
+**C.3 Economic Gatekeeper** ✅
+- [x] `gatekeeper.ts` - Middleware para transfers
+- [x] ICircuitBreaker + ITreasury interfaces
 
 ---
 
-### 🔵 FASE 4: FEATURES (Depois das bases)
-> "Agora sim, novas funcionalidades"
+### 🟡 SPRINT D: FEATURES - PRÓXIMO
+> Novas funcionalidades
 
-**4.1 Economy Core**
-- [ ] 🔴 `core/economy/fitness.ts` - Revised fitness function
-- [ ] 🔴 `core/economy/guardian-scoring.ts` - Multi-dimensional scoring
+**D.1 Economy Core** (~4h)
+- [ ] 🔴 `core/economy/fitness.ts` - Revised fitness function (log/arctan)
+- [ ] 🔴 `core/economy/guardian-scoring.ts` - Multi-dimensional scoring + tiers
 
-**4.2 Scenarios**
-- [ ] 🟡 TIER 3 scenarios (AGI_SINGULARITY, DEFLATION_TRAP)
-- [ ] 🟡 TIER 5 scenarios (COMMONS_COLLAPSE, CARTEL_TAKEOVER)
+**D.2 Security Avancado** (~3h)
+- [ ] 🔴 `core/enforcement/anomaly-detection.ts` - 3σ rule, circuit breakers
+- [ ] 🔴 `core/enforcement/cartel-detection.ts` - Graph cycle detection
 
-**4.3 Benchmarking**
-- [ ] 🔴 Benchmark framework (8.1)
-- [ ] 🔴 Achievement system (8.2)
-
-**4.4 Governance (Futuro)**
-- [ ] 🔴 `core/governance/three-branch.ts`
-- [ ] 🔴 Cross-realm operations (UIS-1.0)
-
-**4.5 Session Materialization** (~4h) 🆕
-> Sessions como Agreements no ledger (compliance/audit)
+**D.3 Session Materialization** (~4h)
 - [ ] 🔴 `SESSION_TYPE` em `agreement-types.ts`
 - [ ] 🔴 Sessions persistidas no Event Store
 - [ ] 🔴 "Right to Forget" via Agreement termination
 
+**D.4 Cenários Avançados** (~6h)
+- [ ] 🟡 TIER 3: AGI_SINGULARITY, DEFLATION_TRAP
+- [ ] 🟡 TIER 5: COMMONS_COLLAPSE, CARTEL_TAKEOVER
+
 ---
 
-### 🏁 FASE FINAL: POLISH
-> "Qualidade production-grade antes de lançar"
+### 🔵 SPRINT E: GOVERNANCE - FUTURO
+> Estruturas de governança
 
-**F.1 Documentação** (~4h)
-- [ ] 🔴 Sync todos os docs com estado atual do código
-- [ ] 🔴 Atualizar ARCHITECTURE.md com novos componentes
-- [ ] 🔴 Atualizar README.md com quick start atualizado
-- [ ] 🔴 Criar CHANGELOG.md com todas as mudanças
+**E.1 Three-Branch Governance** (~8h)
+- [ ] 🔴 `core/governance/three-branch.ts` - Executive/Legislative/Judicial
+- [ ] 🔴 Monetary policy transmission
+- [ ] 🔴 Public goods (quadratic funding)
 
-**F.2 API Cleanup & Hardening** (~6h)
-- [ ] 🔴 Resolver ~356 erros TypeScript
-    - Schema drift entre tipos e implementações
-    - Readonly conflicts
-    - Import conflicts
-- [ ] 🔴 Garantir 100% type safety
-- [ ] 🔴 Remover código morto/duplicado
+**E.2 Cross-Realm** (~6h)
+- [ ] 🔴 `core/interop/uis-1.0.ts` - Cross-realm interoperability
+- [ ] 🔴 Federated ledger support
 
-**F.3 Quality Gates**
+---
+
+### 🔵 SPRINT F: BENCHMARKING - FUTURO
+> Métricas e achievements
+
+**F.1 Benchmark Framework** (~4h)
+- [ ] 🔴 BenchmarkScore interface (survival, equality, resilience)
+- [ ] 🔴 Baseline values + version comparison
+
+**F.2 Achievement System** (~3h)
+- [ ] 🔴 Survival achievements (Cockroach, Phoenix, Unbreakable)
+- [ ] 🔴 Equality achievements (Utopia, Rising Tide)
+- [ ] 🔴 Adaptation achievements (Pivot Master, Antifragile)
+
+---
+
+### 🏁 SPRINT FINAL: POLISH
+> Production-grade quality
+
+**Final.1 Documentação** (~4h)
+- [ ] 🔴 Sync docs com código atual
+- [ ] 🔴 ARCHITECTURE.md atualizado
+- [ ] 🔴 README.md com quick start
+- [ ] 🔴 CHANGELOG.md
+
+**Final.2 TypeScript Cleanup** (~6h)
+- [ ] 🔴 Resolver erros TypeScript
+- [ ] 🔴 100% type safety
+- [ ] 🔴 Remover código morto
+
+**Final.3 Quality Gates**
 - [ ] 🔴 Todos os testes passando
 - [ ] 🔴 Zero erros TypeScript
-- [ ] 🔴 Cobertura de testes > 70%
-- [ ] 🔴 Documentação completa
+- [ ] 🔴 Cobertura > 70%
 
 ---
 
