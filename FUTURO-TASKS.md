@@ -714,3 +714,11 @@
 14. 🔴 **Simulação → Sistema real** (7.5)
 15. 🔴 **Cross-realm operations** (UIS-1.0)
 16. 🔴 **Formal verification**
+
+### Final Polish:
+17. 🔴 **Atualizar documentação** - Sync docs com estado atual
+18. 🔴 **API Cleanup & Hardening** - Resolver 356 erros TypeScript, garantir qualidade production-grade
+    - Schema drift entre tipos e implementações
+    - Readonly conflicts
+    - Import conflicts
+    - Esforço estimado: 4-6h
