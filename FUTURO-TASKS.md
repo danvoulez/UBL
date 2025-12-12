@@ -689,35 +689,107 @@
 
 ---
 
-## Implementation Priority (Final)
+## 🏗️ FOUNDATION FIRST - Prioridades Reorganizadas
 
-### Immediate (Semana 1-2): ✅ COMPLETO
+> **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
+
+---
+
+### ✅ FASE 0: COMPLETO
 1. ✅ Agent Economy Core (Fase 1-4)
-2. ✅ Simulation Framework v1 + v2
-3. ✅ Sprint 1 + Sprint 2 fixes
-4. ✅ **Sprint 3: Simulation fixes** (7.1)
-5. ✅ **Sprint 4: Circuit breakers + Ongoing Effects** (7.2)
-6. ✅ **Sprint 5-7: Treasury fund + Recovery** (7.2)
-7. ✅ **Sprint 8: Economic Laboratory documentation**
+2. ✅ Simulation Framework v1 + v2 + Sprints 1-8
+3. ✅ MEGA SPRINT: Aggregates, Health Dashboard, Guardian Accountability, Physics Validation, Continuity
 
-### Medium-term (Semana 3-4):
-7. 🔴 **Health dashboard** (7.3)
-8. 🔴 **Guardian accountability** (7.2)
-9. 🔴 **TIER 3 scenarios** (7.4)
-10. 🔴 **Transaction support** (6.3)
-11. 🔴 **Physics validation** (6.1)
+---
 
-### Long-term (Mês 2+):
-12. 🔴 **Benchmark framework** (8.1)
-13. 🔴 **Achievement system** (8.2)
-14. 🔴 **Simulação → Sistema real** (7.5)
-15. 🔴 **Cross-realm operations** (UIS-1.0)
-16. 🔴 **Formal verification**
+### 🔴 FASE 1: CONFIANÇA (Testes + Security)
+> "Não crescer sem saber que o que temos funciona"
 
-### Final Polish:
-17. 🔴 **Atualizar documentação** - Sync docs com estado atual
-18. 🔴 **API Cleanup & Hardening** - Resolver 356 erros TypeScript, garantir qualidade production-grade
+**1.1 Testes Críticos** (~4h)
+- [ ] 🔴 `tests/business/agent-economy/registration.test.ts`
+- [ ] 🔴 `tests/business/agent-economy/wallet.test.ts`
+- [ ] 🔴 `tests/foundation/attacks/agent-impersonation.test.ts`
+
+**1.2 Security Hardening** (~6h)
+- [ ] 🔴 Event replay attack prevention (sequence + nonce)
+- [ ] 🔴 Hash chain for TrajectorySpan
+- [ ] 🔴 Cryptographic signatures for non-repudiation
+
+---
+
+### 🟡 FASE 2: INTEGRIDADE (Technical Debt)
+> "Corrigir o que está hardcoded ou incompleto"
+
+**2.1 Event Store** (~3h)
+- [ ] 🔴 Add `query()` method to EventStore for filtering
+- [ ] 🔴 Proper aggregate versioning (not hardcoded `1`)
+
+**2.2 Transactions** (~4h)
+- [ ] 🔴 IntentTransaction interface with compensation steps
+- [ ] 🔴 Atomic event append for transaction commits
+
+**2.3 Testes Restantes** (~3h)
+- [ ] 🔴 `tests/business/agent-economy/loans.test.ts`
+- [ ] 🔴 `tests/business/agent-economy/trajectory.test.ts`
+- [ ] 🔴 `tests/business/perception/watcher-lifecycle.test.ts`
+- [ ] 🔴 `tests/business/perception/shadow-graph.test.ts`
+
+---
+
+### 🟢 FASE 3: ESCALA (Performance)
+> "Preparar para crescer"
+
+**3.1 Event Store Performance** (~6h)
+- [ ] 🔴 Event batching for micro-payments, telemetry
+- [ ] 🔴 Temporal snapshots every 1000 events or 24h
+- [ ] 🔴 Projection cache in ContainerManager
+
+**3.2 Read Performance** (~4h)
+- [ ] 🔴 Read-model projections for high-read scenarios
+- [ ] 🔴 Intent pre-validation cache (LRU)
+
+---
+
+### 🔵 FASE 4: FEATURES (Depois das bases)
+> "Agora sim, novas funcionalidades"
+
+**4.1 Economy Core**
+- [ ] 🔴 `core/economy/fitness.ts` - Revised fitness function
+- [ ] 🔴 `core/economy/guardian-scoring.ts` - Multi-dimensional scoring
+
+**4.2 Scenarios**
+- [ ] 🟡 TIER 3 scenarios (AGI_SINGULARITY, DEFLATION_TRAP)
+- [ ] 🟡 TIER 5 scenarios (COMMONS_COLLAPSE, CARTEL_TAKEOVER)
+
+**4.3 Benchmarking**
+- [ ] 🔴 Benchmark framework (8.1)
+- [ ] 🔴 Achievement system (8.2)
+
+**4.4 Governance (Futuro)**
+- [ ] 🔴 `core/governance/three-branch.ts`
+- [ ] 🔴 Cross-realm operations (UIS-1.0)
+
+---
+
+### 🏁 FASE FINAL: POLISH
+> "Qualidade production-grade antes de lançar"
+
+**F.1 Documentação** (~4h)
+- [ ] 🔴 Sync todos os docs com estado atual do código
+- [ ] 🔴 Atualizar ARCHITECTURE.md com novos componentes
+- [ ] 🔴 Atualizar README.md com quick start atualizado
+- [ ] 🔴 Criar CHANGELOG.md com todas as mudanças
+
+**F.2 API Cleanup & Hardening** (~6h)
+- [ ] 🔴 Resolver ~356 erros TypeScript
     - Schema drift entre tipos e implementações
     - Readonly conflicts
     - Import conflicts
-    - Esforço estimado: 4-6h
+- [ ] 🔴 Garantir 100% type safety
+- [ ] 🔴 Remover código morto/duplicado
+
+**F.3 Quality Gates**
+- [ ] 🔴 Todos os testes passando
+- [ ] 🔴 Zero erros TypeScript
+- [ ] 🔴 Cobertura de testes > 70%
+- [ ] 🔴 Documentação completa
