@@ -94,6 +94,20 @@ export interface EventStore {
     from?: SequenceNumber,
     to?: SequenceNumber
   ): Promise<ChainVerificationResult>;
+  
+  /**
+   * Query events with flexible filtering (FASE 2.1)
+   * Supports filtering by multiple criteria simultaneously
+   */
+  query(criteria: QueryCriteria): Promise<QueryResult>;
+  
+  /**
+   * Get the next version for an aggregate (proper versioning)
+   */
+  getNextVersion(
+    aggregateType: AggregateType,
+    aggregateId: EntityId
+  ): Promise<number>;
 }
 
 export interface EventInput<T = unknown> {
@@ -123,6 +137,59 @@ export interface EventFilter {
   readonly aggregateTypes?: readonly AggregateType[];
   readonly eventTypes?: readonly string[];
   readonly afterSequence?: SequenceNumber;
+}
+
+// ============================================================================
+// QUERY INTERFACE (FASE 2.1)
+// ============================================================================
+
+export interface QueryCriteria {
+  /** Filter by event types */
+  readonly eventTypes?: readonly string[];
+  
+  /** Filter by aggregate types */
+  readonly aggregateTypes?: readonly AggregateType[];
+  
+  /** Filter by specific aggregate IDs */
+  readonly aggregateIds?: readonly EntityId[];
+  
+  /** Filter by actor */
+  readonly actor?: {
+    readonly type?: 'System' | 'Entity';
+    readonly entityId?: EntityId;
+  };
+  
+  /** Filter by correlation ID (for transaction tracking) */
+  readonly correlationId?: EntityId;
+  
+  /** Filter by time range */
+  readonly timeRange?: {
+    readonly from?: Timestamp;
+    readonly to?: Timestamp;
+  };
+  
+  /** Filter by sequence range */
+  readonly sequenceRange?: {
+    readonly from?: SequenceNumber;
+    readonly to?: SequenceNumber;
+  };
+  
+  /** Pagination */
+  readonly pagination?: {
+    readonly limit?: number;
+    readonly offset?: number;
+  };
+  
+  /** Sort order */
+  readonly orderBy?: 'sequence' | 'timestamp';
+  readonly orderDirection?: 'asc' | 'desc';
+}
+
+export interface QueryResult {
+  readonly events: readonly Event[];
+  readonly total: number;
+  readonly hasMore: boolean;
+  readonly nextOffset?: number;
 }
 
 // ============================================================================
@@ -300,6 +367,95 @@ export function createInMemoryEventStore(): EventStore {
       });
       
       return hashChain.verifyChain(subset);
+    },
+    
+    async query(criteria: QueryCriteria): Promise<QueryResult> {
+      let filtered = [...events];
+      
+      // Filter by event types
+      if (criteria.eventTypes?.length) {
+        filtered = filtered.filter(e => criteria.eventTypes!.includes(e.type));
+      }
+      
+      // Filter by aggregate types
+      if (criteria.aggregateTypes?.length) {
+        filtered = filtered.filter(e => criteria.aggregateTypes!.includes(e.aggregateType));
+      }
+      
+      // Filter by aggregate IDs
+      if (criteria.aggregateIds?.length) {
+        filtered = filtered.filter(e => criteria.aggregateIds!.includes(e.aggregateId));
+      }
+      
+      // Filter by actor
+      if (criteria.actor) {
+        filtered = filtered.filter(e => {
+          if (criteria.actor!.type && e.actor.type !== criteria.actor!.type) return false;
+          if (criteria.actor!.entityId && e.actor.type === 'Entity' && e.actor.entityId !== criteria.actor!.entityId) return false;
+          return true;
+        });
+      }
+      
+      // Filter by correlation ID
+      if (criteria.correlationId) {
+        filtered = filtered.filter(e => e.causation?.correlationId === criteria.correlationId);
+      }
+      
+      // Filter by time range
+      if (criteria.timeRange) {
+        if (criteria.timeRange.from) {
+          filtered = filtered.filter(e => e.timestamp >= criteria.timeRange!.from!);
+        }
+        if (criteria.timeRange.to) {
+          filtered = filtered.filter(e => e.timestamp <= criteria.timeRange!.to!);
+        }
+      }
+      
+      // Filter by sequence range
+      if (criteria.sequenceRange) {
+        if (criteria.sequenceRange.from) {
+          filtered = filtered.filter(e => e.sequence >= criteria.sequenceRange!.from!);
+        }
+        if (criteria.sequenceRange.to) {
+          filtered = filtered.filter(e => e.sequence <= criteria.sequenceRange!.to!);
+        }
+      }
+      
+      // Sort
+      const orderBy = criteria.orderBy ?? 'sequence';
+      const direction = criteria.orderDirection ?? 'asc';
+      filtered.sort((a, b) => {
+        const aVal = orderBy === 'sequence' ? Number(a.sequence) : a.timestamp;
+        const bVal = orderBy === 'sequence' ? Number(b.sequence) : b.timestamp;
+        return direction === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+      
+      const total = filtered.length;
+      
+      // Pagination
+      const offset = criteria.pagination?.offset ?? 0;
+      const limit = criteria.pagination?.limit ?? 100;
+      const paginated = filtered.slice(offset, offset + limit);
+      
+      return {
+        events: paginated.map(e => deepFreeze({ ...e })),
+        total,
+        hasMore: offset + limit < total,
+        nextOffset: offset + limit < total ? offset + limit : undefined,
+      };
+    },
+    
+    async getNextVersion(
+      aggregateType: AggregateType,
+      aggregateId: EntityId
+    ): Promise<number> {
+      const key = makeAggregateKey(aggregateType, aggregateId);
+      const aggEvents = eventsByAggregate.get(key);
+      if (!aggEvents || aggEvents.length === 0) {
+        return 1;
+      }
+      const lastEvent = aggEvents[aggEvents.length - 1];
+      return lastEvent.aggregateVersion + 1;
     },
   };
 }
