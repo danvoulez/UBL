@@ -62,13 +62,13 @@ export interface TreasuryConfig {
 }
 
 const DEFAULT_TREASURY_CONFIG: TreasuryConfig = {
-  initialBalance: 10_000_000n,
-  minimumBalance: 1_000_000n,
-  prosperityTaxRate: 0.02,        // 2% tax during good times
-  crisisSentimentThreshold: -0.3,
-  crisisUnemploymentThreshold: 0.08,
-  maxEmergencyDistribution: 500n,
-  interventionCooldown: 30,       // 30 days between interventions
+  initialBalance: 20_000_000n,    // SPRINT 6: Doubled initial balance
+  minimumBalance: 500_000n,       // SPRINT 6: Lower minimum (more aggressive)
+  prosperityTaxRate: 0.03,        // SPRINT 6: 3% tax during good times
+  crisisSentimentThreshold: -0.2, // SPRINT 6: More sensitive trigger
+  crisisUnemploymentThreshold: 0.06, // SPRINT 6: More sensitive
+  maxEmergencyDistribution: 800n, // SPRINT 6: Larger distributions
+  interventionCooldown: 14,       // SPRINT 6: 2 weeks between interventions
 };
 
 // =============================================================================
@@ -129,6 +129,14 @@ export class TreasuryStabilizationFund {
       const intervention = this.executeIntervention(day, crisisLevel, scripts, market);
       if (intervention) {
         actions.push(intervention);
+      }
+    }
+    
+    // SPRINT 6: Recovery mechanism - reactivate scripts when market improves
+    if (market.cyclePhase === 'Expansion' && market.sentiment > 0.3) {
+      const recoveryAction = this.attemptRecovery(day, scripts, market);
+      if (recoveryAction) {
+        actions.push(recoveryAction);
       }
     }
     
@@ -338,6 +346,64 @@ export class TreasuryStabilizationFund {
       amount: totalDistributed,
       scriptsAffected: targetScripts.length,
       description: `${crisisLevel} crisis intervention: ${totalDistributed} distributed`,
+    };
+  }
+  
+  // ---------------------------------------------------------------------------
+  // SPRINT 6: RECOVERY MECHANISM
+  // ---------------------------------------------------------------------------
+  
+  private attemptRecovery(
+    day: number,
+    scripts: SimulatedScript[],
+    market: MarketState
+  ): TreasuryAction | null {
+    // Find inactive scripts that could be reactivated
+    const inactiveScripts = scripts.filter(s => !s.state.isActive);
+    
+    if (inactiveScripts.length === 0) return null;
+    
+    // Only attempt recovery every 30 days
+    if (day % 30 !== 0) return null;
+    
+    // Calculate how many we can afford to reactivate
+    const reactivationCost = 300n; // Cost to restart a script
+    const availableFunds = this.state.balance - this.config.minimumBalance;
+    const maxReactivations = Number(availableFunds / reactivationCost);
+    
+    if (maxReactivations < 1) return null;
+    
+    // Prioritize scripts with higher reputation (more likely to succeed)
+    const candidates = inactiveScripts
+      .sort((a, b) => b.state.reputation - a.state.reputation)
+      .slice(0, Math.min(maxReactivations, Math.floor(inactiveScripts.length * 0.1))); // Max 10% of inactive
+    
+    if (candidates.length === 0) return null;
+    
+    let totalSpent = 0n;
+    let reactivated = 0;
+    
+    for (const script of candidates) {
+      // Reactivate with seed funding
+      script.state.isActive = true;
+      script.state.walletBalance = reactivationCost;
+      script.state.loanOutstanding = 0n; // Fresh start
+      script.state.reputation = Math.max(30, script.state.reputation * 0.8); // Slight reputation penalty
+      
+      totalSpent += reactivationCost;
+      reactivated++;
+    }
+    
+    this.state.balance -= totalSpent;
+    this.state.totalDistributed += totalSpent;
+    
+    console.log(`🔄 RECOVERY: Reactivated ${reactivated} scripts with ${totalSpent} funding`);
+    
+    return {
+      type: 'EmergencyUBI',
+      amount: totalSpent,
+      scriptsAffected: reactivated,
+      description: `Recovery: ${reactivated} scripts reactivated with ${totalSpent} funding`,
     };
   }
   
