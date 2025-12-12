@@ -702,18 +702,18 @@
 
 ---
 
-### 🔴 FASE 1: CONFIANÇA (Testes + Security)
+### ✅ FASE 1: CONFIANÇA (Testes + Security) - COMPLETO
 > "Não crescer sem saber que o que temos funciona"
 
-**1.1 Testes Críticos** (~4h)
-- [ ] 🔴 `tests/business/agent-economy/registration.test.ts`
-- [ ] 🔴 `tests/business/agent-economy/wallet.test.ts`
-- [ ] 🔴 `tests/foundation/attacks/agent-impersonation.test.ts`
+**1.1 Testes Críticos** ✅
+- [x] � `tests/business/agent-economy/registration.test.ts`
+- [x] � `tests/business/agent-economy/wallet.test.ts`
+- [x] � `tests/foundation/attacks/agent-impersonation.test.ts`
 
-**1.2 Security Hardening** (~6h)
-- [ ] 🔴 Event replay attack prevention (sequence + nonce)
-- [ ] 🔴 Hash chain for TrajectorySpan
-- [ ] 🔴 Cryptographic signatures for non-repudiation
+**1.2 Security Hardening** ✅
+- [x] � Event replay attack prevention (`core/security/replay-prevention.ts`)
+- [x] � Hash chain for TrajectorySpan (`core/security/hash-chain.ts`)
+- [x] � Cryptographic signatures (`core/security/signatures.ts`)
 
 ---
 
