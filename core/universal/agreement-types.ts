@@ -741,6 +741,113 @@ export const WORKSPACE_EXECUTION_TYPE: AgreementTypeDefinition = {
   ]
 };
 
+/**
+ * Session Agreement - materializes AI/agent sessions as agreements
+ * 
+ * SPRINT D.3: Sessions as first-class agreements for compliance/audit
+ * 
+ * Purpose:
+ * - Track all interactions in a session
+ * - Enable "Right to Forget" via agreement termination
+ * - Provide audit trail for AI interactions
+ * - Comply with data retention policies
+ */
+export const SESSION_TYPE: AgreementTypeDefinition = {
+  id: 'session',
+  name: 'Session Agreement',
+  description: 'Agreement that materializes an AI/agent session for compliance and audit',
+  version: 1,
+  allowedRealms: 'all',
+  
+  requiredParticipants: [
+    {
+      role: 'User',
+      description: 'The user initiating the session',
+      minCount: 1,
+      maxCount: 1,
+      allowedEntityTypes: ['Person', 'Organization', 'System'],
+      requiresConsent: true,
+      consentMethods: ['Implicit', 'Digital'], // Implicit consent by starting session
+    },
+    {
+      role: 'Agent',
+      description: 'The AI agent participating in the session',
+      minCount: 1,
+      maxCount: 1,
+      allowedEntityTypes: ['Agent', 'System'],
+      requiresConsent: false, // Agent consents by responding
+    },
+  ],
+  
+  optionalParticipants: [
+    {
+      role: 'Guardian',
+      description: 'Guardian overseeing the agent',
+      minCount: 0,
+      maxCount: 1,
+      requiresConsent: false,
+      isSupervisor: true,
+    },
+    {
+      role: 'Witness',
+      description: 'System witness for audit purposes',
+      minCount: 0,
+      maxCount: 1,
+      isWitness: true,
+      requiresConsent: false,
+    },
+  ],
+  
+  grantsRoles: [
+    {
+      participantRole: 'User',
+      roleType: 'SessionParticipant',
+      scope: 'agreement',
+      validity: 'agreement',
+      permissions: [
+        { action: 'read', resource: 'Session:*' },
+        { action: 'write', resource: 'Session:Messages' },
+        { action: 'terminate', resource: 'Session:*' },
+      ],
+    },
+    {
+      participantRole: 'Agent',
+      roleType: 'SessionAgent',
+      scope: 'agreement',
+      validity: 'agreement',
+      permissions: [
+        { action: 'read', resource: 'Session:*' },
+        { action: 'write', resource: 'Session:Messages' },
+        { action: 'execute', resource: 'Session:Tools' },
+      ],
+    },
+  ],
+  
+  requiredTerms: [
+    {
+      clauseType: 'sessionId',
+      required: true,
+      description: 'Unique identifier for the session',
+    },
+    {
+      clauseType: 'retentionPolicy',
+      required: true,
+      description: 'Data retention policy for session data',
+    },
+  ],
+  
+  hooks: {
+    onActivated: [
+      { type: 'CreateSessionContainer', config: { physics: 'Versioned' } },
+      { type: 'RecordSessionStart', config: {} },
+    ],
+    onTerminated: [
+      { type: 'RecordSessionEnd', config: {} },
+      { type: 'ApplyRetentionPolicy', config: {} },
+    ],
+  },
+};
+
 export const BUILT_IN_AGREEMENT_TYPES: readonly AgreementTypeDefinition[] = [
   GENESIS_AGREEMENT_TYPE,
   TENANT_LICENSE_TYPE,
@@ -752,6 +859,7 @@ export const BUILT_IN_AGREEMENT_TYPES: readonly AgreementTypeDefinition[] = [
   CUSTODY_TYPE,
   WORKSPACE_MEMBERSHIP_TYPE,
   WORKSPACE_EXECUTION_TYPE,
+  SESSION_TYPE,
 ];
 
 /**

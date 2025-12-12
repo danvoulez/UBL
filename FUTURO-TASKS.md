@@ -693,8 +693,8 @@
 
 > **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
 > 
-> **Progresso:** 97 tarefas feitas / 80 pendentes (55%)
-> **Testes:** 403 passando
+> **Progresso:** 100 tarefas feitas / 77 pendentes (56%)
+> **Testes:** 419 passando
 
 ---
 
@@ -772,10 +772,10 @@
 - [x] � `core/enforcement/anomaly-detection.ts` - 3σ rule, circuit breakers
 - [x] � `core/enforcement/cartel-detection.ts` - Graph cycle detection
 
-**D.3 Session Materialization** (~4h)
-- [ ] 🔴 `SESSION_TYPE` em `agreement-types.ts`
-- [ ] 🔴 Sessions persistidas no Event Store
-- [ ] 🔴 "Right to Forget" via Agreement termination
+**D.3 Session Materialization** ✅
+- [x] � `SESSION_TYPE` em `agreement-types.ts`
+- [x] � Sessions persistidas no Event Store (`core/sessions/session-manager.ts`)
+- [x] � "Right to Forget" via `forgetSession()`
 
 **D.4 Cenários Avançados** (~6h)
 - [ ] 🟡 TIER 3: AGI_SINGULARITY, DEFLATION_TRAP
