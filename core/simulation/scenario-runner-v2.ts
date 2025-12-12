@@ -15,6 +15,7 @@ import { AgentPopulation, createPopulation, POPULATION_PRESETS, type PopulationS
 import { ChaosInjector, createChaosInjector, CHAOS_SCENARIOS, type ChaosEvent, type ChaosEffect } from './chaos-injector';
 import { MarketDynamics, createMarketDynamics, type MarketState } from './market-dynamics';
 import { RealisticBehaviorEngine, createBehaviorEngine, type DecisionContext, type PeerInfo } from './realistic-behaviors';
+import { TreasuryStabilizationFund, createTreasuryFund, type TreasuryAction, type TreasuryState } from './treasury-fund';
 
 // =============================================================================
 // ENHANCED SCENARIO DEFINITION
@@ -279,11 +280,13 @@ export class EnhancedScenarioRunner {
   private chaos: ChaosInjector;
   private market: MarketDynamics;
   private behaviors: RealisticBehaviorEngine;
+  private treasury: TreasuryStabilizationFund;
   private scenario: EnhancedScenario;
   
   private metricsHistory: EnhancedMetrics[] = [];
   private marketHistory: MarketState[] = [];
   private chaosEffects: ChaosEffect[] = [];
+  private treasuryActions: TreasuryAction[] = [];
   private lastMetricsDay: number = -1;
   private initialScriptCount: number = 0;
   
@@ -303,6 +306,7 @@ export class EnhancedScenarioRunner {
     this.chaos = createChaosInjector();
     this.market = createMarketDynamics();
     this.behaviors = createBehaviorEngine();
+    this.treasury = createTreasuryFund();
     
     for (const event of scenario.chaosEvents) {
       this.chaos.schedulePreset(event.preset, event.triggerAtDay);
@@ -412,10 +416,15 @@ export class EnhancedScenarioRunner {
       }
     }
     
-    // 3. Process agent behaviors
+    // 3. SPRINT 5: Process Treasury Stabilization Fund
+    const allScripts = this.population.getAllScripts();
+    const treasuryActions = this.treasury.processTick(tick, allScripts, marketState);
+    this.treasuryActions.push(...treasuryActions);
+    
+    // 4. Process agent behaviors
     await this.processAgentBehaviors(tick, marketState);
     
-    // 4. Collect metrics
+    // 5. Collect metrics
     if (tick.simulatedDay - this.lastMetricsDay >= this.scenario.metricsInterval) {
       this.collectMetrics(tick);
       this.lastMetricsDay = tick.simulatedDay;
@@ -426,7 +435,7 @@ export class EnhancedScenarioRunner {
       this.periodPivots = 0;
     }
     
-    // 5. Record market history
+    // 6. Record market history
     if (tick.simulatedDay % 7 === 0) {
       this.marketHistory.push(marketState);
     }
