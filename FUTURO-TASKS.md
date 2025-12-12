@@ -332,7 +332,7 @@
 
 ---
 
-**Last Updated:** 2025-12-11
+**Last Updated:** 2025-12-12
 
 ---
 
@@ -530,66 +530,53 @@
 
 ## Fase 7: Simulation Framework & Stress Testing
 
-> **Status:** 🟢 Framework implementado, melhorias pendentes  
+> **Status:** 🟢 Framework implementado + Sprints 3-7 completos  
 > **Baseado em:** 8 cenários testados, ~100k scripts simulados
+> **Resultados:** GOLDEN_AGE 100%, BLACK_MONDAY 74%, BOOM_BUST 70%
 
-### 7.1 Correções Urgentes (Sprint 3)
+### 7.1 Correções Urgentes (Sprint 3) ✅ COMPLETO
 
 **Descobertas da simulação:**
 - GOLDEN_AGE teve 61% mortalidade mesmo com eventos positivos
 - Pivots = 0 em cenários novos
 - Ciclos econômicos não completam em 5 anos
 
-- [ ] 🔴 **Fix stress em eventos positivos**
-  - Stress deve reduzir ativamente em contexto positivo
-  - Sucesso financeiro deve reduzir ansiedade
+- [x] � **Fix stress em eventos positivos** (Sprint 3)
+  - Stress reduz ativamente em contexto positivo
+  - Sucesso financeiro reduz ansiedade
   - Arquivo: `core/simulation/realistic-behaviors.ts`
-  - Esforço: 2h
 
-- [ ] 🔴 **Fix pivots não funcionando**
-  - Relaxar condições de pivot (adaptability 0.4 → 0.3)
-  - Adicionar pivot por oportunidade (não só desespero)
-  - Adicionar pivot por burnout
+- [x] � **Fix pivots não funcionando** (Sprint 3)
+  - Relaxadas condições de pivot
+  - Adicionado pivot por oportunidade e burnout
   - Arquivo: `core/simulation/realistic-behaviors.ts`
-  - Esforço: 1h
 
-- [ ] 🔴 **Fix ciclos econômicos muito longos**
-  - Reduzir expansionDuration: 365 → 270 dias
-  - Reduzir contractionDuration: 90 → 60 dias
-  - Aumentar volatility: 0.4 → 0.5
+- [x] � **Fix ciclos econômicos muito longos** (Sprint 3)
+  - expansionDuration: 365 → 270 dias
+  - contractionDuration: 90 → 60 dias
+  - volatility: 0.4 → 0.5
   - Arquivo: `core/simulation/market-dynamics.ts`
-  - Esforço: 30min
 
-### 7.2 Mecanismos de Estabilização
+### 7.2 Mecanismos de Estabilização ✅ COMPLETO
 
-- [ ] 🔴 **Circuit Breakers**
-  ```typescript
-  interface CircuitBreakerConfig {
-    survivalThreshold: number;    // 0.5 = trigger at 50% survival
-    stressThreshold: number;      // 0.8 = trigger at 80% stress
-    maxDailyDefaultRate: number;  // 0.05 = max 5% defaults/day
-    cooldownDays: number;         // 7 days between triggers
-  }
-  ```
-  - Pausa operações quando stress sistêmico > 80%
-  - Limita defaults por dia
-  - Arquivo: `core/simulation/circuit-breakers.ts` (novo)
-  - Esforço: 4h
+- [x] � **Circuit Breakers** (Sprint 4)
+  - Implementado em `core/simulation/market-dynamics.ts`
+  - Trip on 40% demand drop or -0.7 sentiment
+  - Cooldown de 7 dias
+  - Freeze de mudanças bruscas durante crise
 
-- [ ] 🔴 **Treasury Stabilization Fund**
-  ```typescript
-  interface TreasuryFundConfig {
-    initialBalance: bigint;
-    dailyReplenishment: bigint;
-    maxBailoutPerScript: bigint;
-    minReputationForBailout: number;
-    interventionThreshold: number;  // 0.6 = intervene at 60% survival
-  }
-  ```
-  - Bailouts automáticos para scripts elegíveis
-  - Ativado quando survival < 60%
-  - Arquivo: `core/simulation/treasury-fund.ts` (novo)
-  - Esforço: 3h
+- [x] 🟢 **Ongoing Effects** (Sprint 4)
+  - Chaos events agora afetam market state
+  - demandMultiplier, sentimentBoost, panicMode
+  - Integrado em `scenario-runner-v2.ts`
+
+- [x] � **Treasury Stabilization Fund** (Sprint 5-7)
+  - Implementado em `core/simulation/treasury-fund.ts`
+  - Crisis assessment: None/Mild/Moderate/Severe/Critical
+  - Intervention types: EmergencyUBI, TargetedBailout, LoanForgiveness
+  - Prosperity tax collection (3%)
+  - Recovery mechanism - reativa scripts inativos
+  - Tuned para intervenção agressiva
 
 - [ ] 🔴 **Guardian Accountability**
   - Penalidade de reputação quando script faz default (-5)
@@ -651,15 +638,15 @@
 - [ ] 🔴 **TreasuryContainer** - Container especial para fundo de estabilização
 - [ ] 🔴 **Eventos de saúde** - `SystemHealthChecked`, `CircuitBreakerTriggered`
 
-### 7.6 Critérios de Sucesso
+### 7.6 Critérios de Sucesso ✅ TODAS METAS ATINGIDAS
 
-| Cenário | Antes | Meta |
-|---------|-------|------|
-| GOLDEN_AGE survival | 39% | > 80% |
-| BLACK_MONDAY survival | 48% | > 60% |
-| BOOM_BUST survival | 19% | > 40% |
-| Pivots em cenários novos | 0 | > 100 |
-| Ciclos em 5 anos | 1 | ≥ 3 |
+| Cenário | Início | Final | Meta | Status |
+|---------|--------|-------|------|--------|
+| GOLDEN_AGE survival | 39% | **100%** | > 80% | ✅ +61% |
+| BLACK_MONDAY survival | 48% | **74%** | > 60% | ✅ +26% |
+| BOOM_BUST survival | 19% | **70%** | > 40% | ✅ +51% |
+| Pivots em cenários novos | 0 | **1300+** | > 100 | ✅ |
+| Ciclos em 5 anos | 1 | **3+** | ≥ 3 | ✅ |
 
 ---
 
@@ -705,13 +692,14 @@
 
 ## Implementation Priority (Final)
 
-### Immediate (Semana 1-2):
+### Immediate (Semana 1-2): ✅ COMPLETO
 1. ✅ Agent Economy Core (Fase 1-4)
 2. ✅ Simulation Framework v1 + v2
 3. ✅ Sprint 1 + Sprint 2 fixes
-4. 🔴 **Sprint 3: Simulation fixes** (7.1)
-5. 🔴 **Circuit breakers** (7.2)
-6. 🔴 **Treasury fund** (7.2)
+4. ✅ **Sprint 3: Simulation fixes** (7.1)
+5. ✅ **Sprint 4: Circuit breakers + Ongoing Effects** (7.2)
+6. ✅ **Sprint 5-7: Treasury fund + Recovery** (7.2)
+7. ✅ **Sprint 8: Economic Laboratory documentation**
 
 ### Medium-term (Semana 3-4):
 7. 🔴 **Health dashboard** (7.3)
