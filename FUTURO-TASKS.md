@@ -693,8 +693,8 @@
 
 > **Filosofia:** Reforçar bases antes de crescer. Não adicionar features sem confiança no que já existe.
 > 
-> **Progresso:** 103 tarefas feitas / 74 pendentes (58%)
-> **Testes:** 439 passando
+> **Progresso:** 105 tarefas feitas / 72 pendentes (59%)
+> **Testes:** 469 passando
 
 ---
 
@@ -787,9 +787,9 @@
 > Estruturas de governança
 
 **E.1 Three-Branch Governance** ✅
-- [x] � `core/governance/three-branch.ts` - Executive/Legislative/Judicial
-- [ ] 🔴 Monetary policy transmission
-- [ ] 🔴 Public goods (quadratic funding)
+- [x] 🟢 `core/governance/three-branch.ts` - Executive/Legislative/Judicial
+- [x] 🟢 `core/governance/monetary-policy.ts` - Taylor Rule, OMOs, lending facilities
+- [x] 🟢 `core/governance/quadratic-funding.ts` - Public goods funding
 
 **E.2 Cross-Realm** (~6h)
 - [ ] 🔴 `core/interop/uis-1.0.ts` - Cross-realm interoperability
