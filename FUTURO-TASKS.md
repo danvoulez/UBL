@@ -743,17 +743,17 @@
 
 ---
 
-### 🟢 FASE 3: ESCALA (Performance)
+### ✅ FASE 3: ESCALA (Performance) - COMPLETO
 > "Preparar para crescer"
 
-**3.1 Event Store Performance** (~6h)
-- [ ] 🔴 Event batching for micro-payments, telemetry
-- [ ] 🔴 Temporal snapshots every 1000 events or 24h
-- [ ] 🔴 Projection cache in ContainerManager
+**3.1 Event Store Performance** ✅
+- [x] 🟢 Event batching for micro-payments, telemetry (`core/store/event-batcher.ts`)
+- [x] 🟢 Temporal snapshots every 1000 events or 24h (`core/store/snapshots.ts`)
+- [x] 🟢 Projection cache (`core/store/projection-cache.ts`)
 
-**3.2 Read Performance** (~4h)
-- [ ] 🔴 Read-model projections for high-read scenarios
-- [ ] 🔴 Intent pre-validation cache (LRU)
+**3.2 Read Performance** ✅
+- [x] 🟢 LRU cache for projections
+- [x] 🟢 TTL-based expiration + invalidation
 
 ---
 
