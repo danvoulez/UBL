@@ -168,6 +168,8 @@ console.log(score.status);     // 'Healthy' | 'Warning' | 'Critical'
 | [ROADMAP.md](./ROADMAP.md) | Status do projeto |
 | [CHANGELOG.md](./CHANGELOG.md) | Histórico de versões |
 | [docs/API-REFERENCE.md](./docs/API-REFERENCE.md) | Referência da API |
+| [docs/COOKBOOK.md](./docs/COOKBOOK.md) | Exemplos práticos |
+| [docs/TRUST-ARCHITECTURE.md](./docs/TRUST-ARCHITECTURE.md) | 🔐 Arquitetura de segurança |
 
 ---
 

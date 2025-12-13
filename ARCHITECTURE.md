@@ -494,4 +494,12 @@ Conflict: LastWriteWins | FirstWriteWins | SourcePriority | Manual
 
 ---
 
+## Documentação Relacionada
+
+- [TRUST-ARCHITECTURE.md](./docs/TRUST-ARCHITECTURE.md) — 🔐 Arquitetura de segurança e defesas
+- [API-REFERENCE.md](./docs/API-REFERENCE.md) — Referência da API
+- [COOKBOOK.md](./docs/COOKBOOK.md) — Exemplos práticos
+
+---
+
 *"The ledger doesn't model business. The ledger **is** business—formalized."*
