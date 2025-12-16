@@ -521,7 +521,11 @@ export function createIntentHandler(
         const authorization = handlerContext.authorization as any;
         const eventStore = handlerContext.eventStore as any;
         
-        if (authorization && definition.requiredPermissions.length > 0) {
+        // System actors bypass ABAC for bootstrap/signup operations
+        const isSystemActor = intent.actor.type === 'System';
+        const isPublicIntent = definition.requiredPermissions.length === 0;
+        
+        if (authorization && definition.requiredPermissions.length > 0 && !isSystemActor) {
           // Map intent category to resource type
           const resourceType = definition.category === 'Agreement' ? 'Agreement'
             : definition.category === 'Asset' ? 'Asset'
