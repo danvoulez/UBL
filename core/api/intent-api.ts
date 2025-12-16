@@ -483,6 +483,8 @@ export function createIntentHandler(
   const handler: IntentHandler & { context?: Partial<HandlerContext> } = {
     context: fullContext,
     async handle<T>(intent: Intent<T>): Promise<IntentResult> {
+      // Add self-reference to context so handlers can call other intents
+      (fullContext as any).intentHandler = handler;
       const definition = intentRegistry.get(intent.intent);
       
       if (!definition) {
