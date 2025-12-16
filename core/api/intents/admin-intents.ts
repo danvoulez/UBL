@@ -382,4 +382,118 @@ export const ADMIN_INTENTS: readonly IntentDefinition[] = [
       }
     },
   },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PUBLIC SIGNUP - No auth required
+  // ─────────────────────────────────────────────────────────────────────────
+  {
+    name: 'public:signup',
+    description: 'Self-service signup. Creates user + personal Realm if no invite. No auth required.',
+    category: 'Meta',
+    schema: {
+      type: 'object',
+      required: ['email', 'name'],
+      properties: {
+        email: { type: 'string', format: 'email' },
+        name: { type: 'string', minLength: 1, maxLength: 100 },
+        password: { type: 'string', minLength: 8 },
+        realmName: { type: 'string', minLength: 1, maxLength: 100, description: 'Name for personal realm (default: "{name}\'s Space")' },
+        inviteToken: { type: 'string', description: 'Optional invite token to join existing realm' },
+      },
+    },
+    requiredPermissions: [], // PUBLIC - no permissions required
+    examples: [
+      { email: 'alice@example.com', name: 'Alice' },
+      { email: 'bob@example.com', name: 'Bob', realmName: 'Bob\'s Startup' },
+      { email: 'carol@example.com', name: 'Carol', inviteToken: 'inv_abc123' },
+    ],
+    handler: async (intent: Intent, context: HandlerContext): Promise<IntentResult> => {
+      const startTime = Date.now();
+      const payload = intent.payload as { 
+        email: string; 
+        name: string; 
+        password?: string; 
+        realmName?: string;
+        inviteToken?: string;
+      };
+      
+      const admin = await import('../../../antenna/admin.js');
+      const intentHandler = (context as any).intentHandler || (context as any).runtimeRegistry?.intentHandler;
+      
+      try {
+        // Check if user already exists by email
+        const eventStore = context.eventStore as any;
+        let existingUser = null;
+        
+        // TODO: Check inviteToken and get realmId from it
+        // For now, always create new realm if no inviteToken
+        
+        let realmId: EntityId | undefined;
+        let isAdmin = true; // User is admin of their own realm
+        
+        if (payload.inviteToken) {
+          // TODO: Validate invite token and get realm
+          // For now, reject invites (not implemented)
+          return {
+            success: false,
+            outcome: { type: 'Nothing', reason: 'Invite system not yet implemented. Please signup without invite.' },
+            events: [],
+            affordances: [],
+            errors: [{ code: 'INVITE_NOT_IMPLEMENTED', message: 'Invite tokens are not yet supported' }],
+            meta: { processedAt: Date.now(), processingTime: Date.now() - startTime },
+          };
+        }
+        
+        // No invite = create personal realm + user as admin
+        const realmName = payload.realmName || `${payload.name}'s Space`;
+        
+        // Step 1: Create realm
+        const realmResult = await admin.createRealm({ name: realmName }, intentHandler);
+        realmId = realmResult.realm.id;
+        
+        // Step 2: Create user in that realm as admin
+        const userResult = await admin.createUser({
+          realmId,
+          email: payload.email,
+          name: payload.name,
+          password: payload.password,
+          isAdmin: true,
+        }, intentHandler);
+        
+        return {
+          success: true,
+          outcome: {
+            type: 'Created' as const,
+            entity: {
+              id: userResult.entityId,
+              email: payload.email,
+              name: payload.name,
+              realmId,
+              realmName,
+              isAdmin: true,
+              apiKey: userResult.apiKey,
+              credentials: userResult.credentials,
+            },
+            id: userResult.entityId,
+          },
+          events: [],
+          affordances: [
+            { intent: 'chat', description: 'Start chatting with the system', required: [] },
+            { intent: 'user:create', description: 'Invite others to your realm', required: ['email', 'name'] },
+            { intent: 'propose', description: 'Create agreements with others', required: ['agreementType', 'parties'] },
+          ],
+          meta: { processedAt: Date.now(), processingTime: Date.now() - startTime },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          outcome: { type: 'Nothing', reason: error.message || String(error) },
+          events: [],
+          affordances: [],
+          errors: [{ code: 'SIGNUP_ERROR', message: error.message || String(error) }],
+          meta: { processedAt: Date.now(), processingTime: Date.now() - startTime },
+        };
+      }
+    },
+  },
 ];

@@ -291,6 +291,59 @@ export const handleSessionGet: RouteHandler = async (req, res, body, ctx) => {
 };
 
 // ============================================================================
+// ROUTE: POST /signup (PUBLIC - no auth required)
+// ============================================================================
+
+export const handleSignup: RouteHandler = async (req, res, body, ctx) => {
+  const traceId = extractTraceId(req.headers) || generateTraceId();
+  
+  // Validate required fields
+  if (!body.email || !body.name) {
+    sendJson(res, 400, {
+      error: 'Missing required fields',
+      code: 'VALIDATION_ERROR',
+      hint: 'Provide email and name in request body',
+    });
+    return;
+  }
+  
+  try {
+    // Execute public:signup intent (no auth required)
+    const result = await ctx.config.intentHandler.handle({
+      intent: 'public:signup',
+      realm: '00000000-0000-0000-0000-000000000000' as EntityId, // Primordial realm for signup
+      actor: { type: 'System', systemId: 'public-signup' } as ActorReference,
+      timestamp: Date.now(),
+      payload: {
+        email: body.email,
+        name: body.name,
+        password: body.password,
+        realmName: body.realmName,
+        inviteToken: body.inviteToken,
+      },
+    });
+    
+    if (result.success) {
+      sendJson(res, 201, {
+        success: true,
+        message: 'Account created successfully',
+        user: result.outcome.type === 'Created' ? result.outcome.entity : null,
+        affordances: result.affordances,
+      });
+    } else {
+      sendJson(res, 400, {
+        success: false,
+        error: result.outcome.type === 'Nothing' ? result.outcome.reason : 'Signup failed',
+        code: result.errors?.[0]?.code || 'SIGNUP_FAILED',
+      });
+    }
+  } catch (error: any) {
+    logger.error('signup.error', { component: 'router', traceId, error: error.message });
+    sendError(res, 500, 'SIGNUP_ERROR', error.message || 'Signup error');
+  }
+};
+
+// ============================================================================
 // ROUTE: GET /suggestions
 // ============================================================================
 
@@ -349,6 +402,10 @@ export async function route(
   
   if (path === '/suggestions' && method === 'GET') {
     return handleSuggestions(req, res, body, ctx);
+  }
+  
+  if (path === '/signup' && method === 'POST') {
+    return handleSignup(req, res, body, ctx);
   }
   
   // Not found
