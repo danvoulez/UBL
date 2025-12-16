@@ -571,7 +571,9 @@ export function createAuthenticationEngine(
         const keyHash = Buffer.from(key).toString('base64');
         
         // Find ApiKeyCreated event with matching hash or key
-        for await (const event of cfg.eventStore.getBySequence(1n)) {
+        // Get current sequence to set upper bound
+        const currentSeq = await cfg.eventStore.getCurrentSequence?.() || 1000000n;
+        for await (const event of cfg.eventStore.getBySequence(1n, currentSeq)) {
           if (event.type === 'ApiKeyCreated') {
             const payload = event.payload as any;
             // Support both keyHash (new format) and key (bootstrap format)
