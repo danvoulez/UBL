@@ -511,6 +511,7 @@ export function createIntentHandler(
           actor: intent.actor,
           ...defaultContext, // This includes eventStore, agreements, realmManager from createIntentHandler
           ...context, // Override with any additional context
+          intentHandler: handler, // Self-reference for nested intent calls
         } as HandlerContext;
 
         // =====================================================================
