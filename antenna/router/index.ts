@@ -16,6 +16,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { EntityId, ActorReference } from '../../core/shared/types';
 import type { IntentHandler, IntentResult } from '../../core/api/intent-api';
 import { logger, generateTraceId, extractTraceId } from '../../core/observability/logger';
+import { authenticateRequest, type AuthenticationEngine } from '../../core/security/authentication';
 
 // ============================================================================
 // TYPES
@@ -33,6 +34,7 @@ export interface RouterContext {
   eventStore: any;
   agentRouter?: any;
   rateLimiter?: any;
+  authEngine?: AuthenticationEngine;
 }
 
 export type RouteHandler = (
@@ -207,6 +209,32 @@ export const handleChat: RouteHandler = async (req, res, body, ctx) => {
   }
   
   const traceId = extractTraceId(req.headers) || generateTraceId();
+  
+  // ─────────────────────────────────────────────────────────────────────
+  // AUTHENTICATION REQUIRED
+  // The /chat endpoint can execute intents via LLM, so it requires auth.
+  // Use /affordances (public) to see what's available without auth.
+  // ─────────────────────────────────────────────────────────────────────
+  if (ctx.authEngine) {
+    const authContext = await authenticateRequest(ctx.authEngine, {
+      authorization: req.headers.authorization as string | undefined,
+      'x-api-key': req.headers['x-api-key'] as string | undefined,
+    });
+    
+    if (!authContext) {
+      sendJson(res, 401, {
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED',
+        hint: 'Provide Authorization: Bearer <token> or X-API-Key header. Use /affordances to see available actions without auth.',
+      });
+      return;
+    }
+    
+    // Inject authenticated actor into startSession if not provided
+    if (body.startSession && !body.startSession.actor) {
+      body.startSession.actor = { type: 'Entity', entityId: authContext.entityId };
+    }
+  }
   
   // Validate session
   if (!body.sessionId && !body.startSession) {

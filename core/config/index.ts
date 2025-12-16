@@ -48,6 +48,9 @@ export function loadConfig(): Config {
       anthropicApiKey: process.env.ANTHROPIC_API_KEY,
       openaiApiKey: process.env.OPENAI_API_KEY,
       geminiApiKey: process.env.GEMINI_API_KEY,
+      ollamaBaseUrl: process.env.OLLAMA_BASE_URL,
+      ollamaApiKey: process.env.OLLAMA_API_KEY,
+      ollamaModel: process.env.OLLAMA_MODEL,
     },
 
     // Redis

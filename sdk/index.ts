@@ -95,6 +95,13 @@ export {
   type AzureOpenAIConfig,
 } from './openai';
 
+export {
+  createOllamaAdapter,
+  createMockLLMAdapter,
+  OLLAMA_SYSTEM_PROMPT,
+  type OllamaConfig,
+} from './ollama';
+
 // ============================================================================
 // PAYMENTS
 // ============================================================================

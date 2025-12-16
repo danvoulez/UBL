@@ -60,10 +60,19 @@ async function executeHookAction(
   agreementId: EntityId,
   agreementState: any,
   services: AgreementHooksServices
-): Promise<{ createdRealmId?: EntityId } | void> {
+): Promise<{ createdRealmId?: EntityId; apiKey?: string } | void> {
   switch (hook.type) {
     case 'CreateRealm':
       return await executeCreateRealmHook(hook, agreementId, agreementState, services);
+    
+    case 'CreateApiKey':
+      return await executeCreateApiKeyHook(hook, agreementId, agreementState, services);
+    
+    case 'GrantPlatformAccess':
+      // Platform access is granted via the role system (grantsRoles)
+      // This hook is a no-op placeholder for explicit documentation
+      console.log(`Platform access granted via agreement ${agreementId}`);
+      break;
     
     case 'TransferAssets':
       // TODO: Implement asset transfer hook

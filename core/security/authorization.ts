@@ -675,6 +675,8 @@ export const PERMISSION_SETS = {
     { action: 'read', resource: 'Asset:*' },
     { action: 'propose', resource: 'Agreement' },
     { action: 'consent', resource: 'Agreement:*' },
+    { action: 'create', resource: 'Session:*' },
+    { action: 'use', resource: 'Chat:*' },
   ] as Permission[],
   
   /** Read-only access */

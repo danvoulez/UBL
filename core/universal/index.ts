@@ -37,6 +37,9 @@ export type {
 export {
   createAgreementTypeRegistry,
   BUILT_IN_AGREEMENT_TYPES,
+  PLATFORM_ACCESS_TYPE,
+  SESSION_TYPE,
+  MEMBERSHIP_TYPE,
 } from './agreement-types';
 
 // Realm Management - Now handled by ContainerManager with Realm physics

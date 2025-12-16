@@ -7,6 +7,7 @@
 import type { IntentDefinition, Intent, IntentResult, HandlerContext } from '../intent-api';
 import { Ids } from '../../shared/types';
 import type { EntityId } from '../../shared/types';
+import { PLATFORM_ACCESS_TYPE } from '../../universal/agreement-types';
 
 export const ENTITY_INTENTS: readonly IntentDefinition[] = [
   {
@@ -95,6 +96,50 @@ export const ENTITY_INTENTS: readonly IntentDefinition[] = [
         },
       });
       
+      // ─────────────────────────────────────────────────────────────────────
+      // AUTO-CREATE PLATFORM ACCESS AGREEMENT
+      // This is the "onboarding bundle" - grants basic platform access
+      // including chat/AI interaction, session creation, etc.
+      // ─────────────────────────────────────────────────────────────────────
+      const platformAccessAgreementId = Ids.agreement();
+      const platformAccessEvent = await eventStore.append({
+        type: 'AgreementProposed',
+        aggregateType: 'Agreement' as any,
+        aggregateId: platformAccessAgreementId,
+        aggregateVersion: 1,
+        actor: { type: 'System', systemId: 'registration-handler' },
+        timestamp: Date.now(),
+        payload: {
+          agreementType: PLATFORM_ACCESS_TYPE.id,
+          parties: [
+            { entityId: 'system' as EntityId, role: 'Platform', consent: { givenAt: Date.now(), method: 'Implicit' } },
+            { entityId, role: 'User', consent: { givenAt: Date.now(), method: 'Implicit' } },
+          ],
+          terms: {
+            description: 'Platform access agreement granting basic chat and AI interaction capabilities',
+            grantedPermissions: PLATFORM_ACCESS_TYPE.grantsRoles?.[0]?.permissions || [],
+          },
+          validity: {
+            effectiveFrom: Date.now(),
+          },
+          autoActivate: true,
+        },
+      });
+      
+      // Auto-activate the platform access agreement
+      const platformAccessActivatedEvent = await eventStore.append({
+        type: 'AgreementActivated',
+        aggregateType: 'Agreement' as any,
+        aggregateId: platformAccessAgreementId,
+        aggregateVersion: 2,
+        actor: { type: 'System', systemId: 'registration-handler' },
+        timestamp: Date.now(),
+        payload: {
+          activatedAt: Date.now(),
+          reason: 'Auto-activated on registration',
+        },
+      });
+      
       return {
         success: true,
         outcome: { 
@@ -103,12 +148,14 @@ export const ENTITY_INTENTS: readonly IntentDefinition[] = [
             id: entityId,
             type: payload.entityType,
             identity: payload.identity,
+            platformAccessAgreementId,
           }, 
-          id: entityId 
+          id: entityId,
         },
-        events: [event],
+        events: [event, platformAccessEvent, platformAccessActivatedEvent],
         affordances: [
           { intent: 'propose', description: 'Create an agreement involving this entity', required: ['agreementType', 'parties'] },
+          { intent: 'chat', description: 'Start a conversation with the AI assistant', required: [] },
         ],
         meta: { processedAt: Date.now(), processingTime: Date.now() - startTime },
       };

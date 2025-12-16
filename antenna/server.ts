@@ -23,6 +23,7 @@ import { AntennaWebSocketServer } from './websocket';
 import type { WebSocketHandlers } from './websocket';
 import { createAnthropicAdapter } from '../sdk/anthropic';
 import { createOpenAIAdapter } from '../sdk/openai';
+import { createOllamaAdapter, createMockLLMAdapter } from '../sdk/ollama';
 import { createRedisRateLimiter } from '../core/operational/rate-limiter-redis';
 import type { RateLimiter } from '../core/operational/governance';
 import { createEventStore } from '../core/store/create-event-store';
@@ -35,6 +36,7 @@ import { createAuditLogger } from '../core/trajectory/event-store-trace';
 import { createRoleStore } from './wiring/role-store';
 import { createAuthorizationWiring } from './wiring/authorization';
 import { route, handleCors, parseBody, type RouterContext, type RouterConfig } from './router';
+import { createAuthenticationEngine } from '../core/security/authentication';
 
 // ============================================================================
 // CONFIGURATION
@@ -86,12 +88,27 @@ export function createAntenna(config: AntennaConfig): AntennaInstance {
 
       // ─────────────────────────────────────────────────────────────────────
       // 1. INITIALIZE LLM ADAPTER
+      // Priority: Ollama (local/remote) > Anthropic > OpenAI > Mock
       // ─────────────────────────────────────────────────────────────────────
       if (!llmAdapter) {
+        const ollamaBaseUrl = appConfig.llm.ollamaBaseUrl;
+        const ollamaApiKey = appConfig.llm.ollamaApiKey;
+        const ollamaModel = appConfig.llm.ollamaModel;
         const anthropicKey = appConfig.llm.anthropicApiKey;
         const openaiKey = appConfig.llm.openaiApiKey;
 
-        if (anthropicKey && anthropicKey !== 'your-anthropic-api-key') {
+        if (ollamaBaseUrl || ollamaApiKey) {
+          // Ollama configured (local or remote)
+          console.log('🤖 Using Ollama:', ollamaBaseUrl || 'http://localhost:11434');
+          llmAdapter = createOllamaAdapter();
+          await llmAdapter.initialize({
+            credentials: { apiKey: ollamaApiKey },
+            options: { 
+              baseUrl: ollamaBaseUrl || 'http://localhost:11434',
+              model: ollamaModel || 'llama3.1:8b',
+            },
+          });
+        } else if (anthropicKey && anthropicKey !== 'your-anthropic-api-key') {
           console.log('🤖 Using Anthropic Claude');
           llmAdapter = createAnthropicAdapter();
           await llmAdapter.initialize({
@@ -106,7 +123,7 @@ export function createAntenna(config: AntennaConfig): AntennaInstance {
             options: { model: 'gpt-4' },
           });
         } else {
-          console.log('⚠️  No LLM API keys found, using mock adapter');
+          console.log('⚠️  No LLM configured, using mock adapter');
           llmAdapter = createMockLLMAdapter();
         }
       }
@@ -224,11 +241,24 @@ export function createAntenna(config: AntennaConfig): AntennaInstance {
         isProduction,
       };
 
+      // Initialize authentication engine with Event Store for persistent API keys
+      const authEngine = createAuthenticationEngine({
+        jwt: {
+          secret: process.env.JWT_SECRET || 'ubl-dev-secret-change-in-production',
+          algorithm: 'HS256',
+          issuer: 'universal-ledger',
+          audience: 'universal-ledger',
+        },
+        eventStore, // Enable persistent API key validation from Event Store
+      });
+      console.log('✅ Authentication engine initialized');
+
       const routerContext: RouterContext = {
         config: routerConfig,
         eventStore,
         agentRouter,
         rateLimiter,
+        authEngine,
       };
 
       server = http.createServer(async (req, res) => {
@@ -318,41 +348,6 @@ export async function startAntenna(config: Partial<AntennaConfig> = {}): Promise
   });
   await antenna.start();
   return antenna;
-}
-
-// ============================================================================
-// MOCK ADAPTER
-// ============================================================================
-
-function createMockLLMAdapter(): LLMAdapter {
-  return {
-    name: 'MockLLM',
-    version: '1.0.0',
-    platform: 'Custom',
-    category: 'LLM',
-    model: 'mock-1',
-    async initialize() {},
-    async healthCheck() { return { healthy: true, latencyMs: 0 }; },
-    async shutdown() {},
-    async complete(request) {
-      const lastMessage = request.messages[request.messages.length - 1];
-      return {
-        content: `I understood: "${lastMessage.content}"\n\nThis is a mock response.`,
-        tokensUsed: 50,
-        finishReason: 'stop',
-      };
-    },
-    async *stream(request) {
-      const response = await this.complete(request);
-      yield { content: response.content, done: true };
-    },
-    async embed(texts) {
-      return texts.map(() => new Array(384).fill(0).map(() => Math.random()));
-    },
-    estimateTokens(text) {
-      return Math.ceil(text.length / 4);
-    },
-  };
 }
 
 // ============================================================================

@@ -45,6 +45,8 @@ export interface CreateApiKeyRequest {
   name: string;
   scopes?: string[];
   expiresInDays?: number;
+  /** Agreement that establishes this API key - required for cascade revocation */
+  establishedBy?: EntityId;
 }
 
 // ============================================================================
@@ -616,6 +618,105 @@ export async function createUser(
     createdAt: Date.now(),
   };
   
+  // Criar Platform Access Agreement automaticamente (seguindo ABAC)
+  // Isso dá ao usuário permissão para usar o chat e a plataforma
+  const PRIMORDIAL_SYSTEM_ID = '00000000-0000-0000-0000-000000000001' as EntityId;
+  const platformAccessAgreementId = generateId('agr-platform');
+  const now = Date.now();
+  
+  try {
+    // Propor Platform Access Agreement
+    await eventStore.append({
+      type: 'AgreementProposed',
+      aggregateType: 'Agreement' as any,
+      aggregateId: platformAccessAgreementId,
+      aggregateVersion: 1,
+      actor: { type: 'System', systemId: 'user-onboarding' } as ActorReference,
+      timestamp: now,
+      payload: {
+        type: 'AgreementProposed',
+        agreementType: 'platform-access',
+        parties: [
+          { entityId: PRIMORDIAL_SYSTEM_ID, role: 'Platform', consent: { givenAt: now, method: 'Implicit' } },
+          { entityId, role: 'User', consent: { givenAt: now, method: 'Implicit' } },
+        ],
+        terms: {
+          description: `Platform access for ${request.name}`,
+          roleType: 'Member',
+          scope: { type: 'Realm', realmId: realm.id },
+        },
+        validity: { effectiveFrom: now },
+      },
+    });
+    
+    // Ativar Platform Access Agreement
+    await eventStore.append({
+      type: 'AgreementStatusChanged',
+      aggregateType: 'Agreement' as any,
+      aggregateId: platformAccessAgreementId,
+      aggregateVersion: 2,
+      actor: { type: 'System', systemId: 'user-onboarding' } as ActorReference,
+      timestamp: now,
+      payload: {
+        type: 'AgreementStatusChanged',
+        previousStatus: 'Proposed',
+        newStatus: 'Active',
+      },
+    });
+    
+    console.log(`✅ Platform access granted to ${request.name} (${entityId})`);
+  } catch (e) {
+    console.error('Failed to create platform access agreement:', e);
+    // Não falhar a criação do usuário por causa disso
+  }
+  
+  // Se isAdmin, criar TenantAdmin Agreement para o realm
+  if (request.isAdmin) {
+    const adminAgreementId = generateId('agr-admin');
+    try {
+      await eventStore.append({
+        type: 'AgreementProposed',
+        aggregateType: 'Agreement' as any,
+        aggregateId: adminAgreementId,
+        aggregateVersion: 1,
+        actor: { type: 'System', systemId: 'user-onboarding' } as ActorReference,
+        timestamp: now,
+        payload: {
+          type: 'AgreementProposed',
+          agreementType: 'realm-admin',
+          parties: [
+            { entityId: PRIMORDIAL_SYSTEM_ID, role: 'System', consent: { givenAt: now, method: 'Implicit' } },
+            { entityId, role: 'TenantAdmin', consent: { givenAt: now, method: 'Implicit' } },
+          ],
+          terms: {
+            description: `Admin access to ${realm.name || realm.id}`,
+            roleType: 'TenantAdmin',
+            scope: { type: 'Realm', targetId: realm.id },
+          },
+          validity: { effectiveFrom: now },
+        },
+      });
+      
+      await eventStore.append({
+        type: 'AgreementStatusChanged',
+        aggregateType: 'Agreement' as any,
+        aggregateId: adminAgreementId,
+        aggregateVersion: 2,
+        actor: { type: 'System', systemId: 'user-onboarding' } as ActorReference,
+        timestamp: now,
+        payload: {
+          type: 'AgreementStatusChanged',
+          previousStatus: 'Proposed',
+          newStatus: 'Active',
+        },
+      });
+      
+      console.log(`✅ TenantAdmin role granted to ${request.name} for realm ${realm.id}`);
+    } catch (e) {
+      console.error('Failed to create admin agreement:', e);
+    }
+  }
+  
   // Criar API key para o usuário (via Event Store)
   const apiKeyData = await createApiKey({
     realmId: realm.id,
@@ -670,6 +771,7 @@ export async function createApiKey(
   const nextVersion = latestEvent ? latestEvent.aggregateVersion + 1 : 1;
   
   // Create ApiKeyCreated event (following ORIGINAL philosophy)
+  // establishedBy links the key to the Agreement that created it (for cascade revocation)
   await eventStore.append({
     type: 'ApiKeyCreated',
     aggregateType: 'ApiKey' as any,
@@ -686,6 +788,7 @@ export async function createApiKey(
       keyHash: Buffer.from(key).toString('base64'), // Store hash, not raw key
       expiresAt,
       revoked: false,
+      establishedBy: request.establishedBy, // Agreement that created this key
     },
   });
   
@@ -853,6 +956,296 @@ export async function verifyApiKey(
         };
       }
     }
+  }
+  
+  return null;
+}
+
+// ============================================================================
+// BOOTSTRAP FOUNDER - First User Setup
+// ============================================================================
+
+/**
+ * Bootstrap the first Founder of the system.
+ * 
+ * This is a special function that bypasses normal ABAC checks because:
+ * 1. It's called during initial system setup
+ * 2. There are no users yet to grant permissions
+ * 3. The Founder role is hardcoded as the highest authority
+ * 
+ * This function:
+ * 1. Creates the Founder entity (Person)
+ * 2. Creates a Founder Agreement (System <-> Founder)
+ * 3. Grants the Founder role with all permissions
+ * 4. Optionally creates a Realm and makes Founder its admin
+ * 5. Creates Platform Access Agreement for chat access
+ * 6. Returns API key for the Founder
+ * 
+ * Can only be called once per system (checks for existing Founder).
+ */
+export interface BootstrapFounderRequest {
+  name: string;
+  email: string;
+  realmName?: string; // If provided, creates a realm and makes founder its admin
+}
+
+export interface BootstrapFounderResult {
+  founderId: EntityId;
+  founderAgreementId: EntityId;
+  realmId?: EntityId;
+  apiKey: string;
+  message: string;
+}
+
+export async function bootstrapFounder(
+  request: BootstrapFounderRequest,
+  eventStore: any
+): Promise<BootstrapFounderResult> {
+  const PRIMORDIAL_REALM_ID = '00000000-0000-0000-0000-000000000000' as EntityId;
+  const PRIMORDIAL_SYSTEM_ID = '00000000-0000-0000-0000-000000000001' as EntityId;
+  
+  // Check if Founder already exists
+  const existingFounder = await findExistingFounder(eventStore);
+  if (existingFounder) {
+    throw new Error(`Founder already exists: ${existingFounder.name} (${existingFounder.id}). Only one Founder per system.`);
+  }
+  
+  const now = Date.now();
+  const founderId = generateId('founder') as EntityId;
+  const founderAgreementId = generateId('agr-founder') as EntityId;
+  const platformAccessAgreementId = generateId('agr-platform') as EntityId;
+  
+  console.log(`\n═══ BOOTSTRAPPING FOUNDER ═══`);
+  console.log(`Name: ${request.name}`);
+  console.log(`Email: ${request.email}`);
+  console.log(`Founder ID: ${founderId}`);
+  
+  // 1. Create Founder Entity
+  await eventStore.append({
+    type: 'EntityCreated',
+    aggregateType: 'Party' as any,
+    aggregateId: founderId,
+    aggregateVersion: 1,
+    actor: { type: 'System', systemId: 'bootstrap-founder' } as ActorReference,
+    timestamp: now,
+    payload: {
+      type: 'EntityCreated',
+      entityType: 'Person',
+      identity: {
+        name: request.name,
+        identifiers: [
+          { scheme: 'email', value: request.email, verified: true },
+        ],
+        contacts: [
+          { type: 'email', value: request.email },
+        ],
+      },
+      meta: { isFounder: true, bootstrappedAt: now },
+    },
+  });
+  console.log(`✅ Founder entity created: ${founderId}`);
+  
+  // 2. Create Founder Agreement (System grants Founder role)
+  await eventStore.append({
+    type: 'AgreementProposed',
+    aggregateType: 'Agreement' as any,
+    aggregateId: founderAgreementId,
+    aggregateVersion: 1,
+    actor: { type: 'System', systemId: 'bootstrap-founder' } as ActorReference,
+    timestamp: now,
+    payload: {
+      type: 'AgreementProposed',
+      agreementType: 'founder-grant',
+      parties: [
+        { entityId: PRIMORDIAL_SYSTEM_ID, role: 'System', consent: { givenAt: now, method: 'Implicit' } },
+        { entityId: founderId, role: 'Founder', consent: { givenAt: now, method: 'Implicit' } },
+      ],
+      terms: {
+        description: `Founder agreement granting ${request.name} full system access`,
+        roleType: 'Founder',
+        scope: { type: 'Global' },
+        grantedPermissions: [
+          { action: '*', resource: '*' },
+          { action: 'create', resource: 'Realm' },
+          { action: 'delegate', resource: '*' },
+          { action: 'grant', resource: 'Role:*' },
+        ],
+      },
+      validity: { effectiveFrom: now },
+    },
+  });
+  
+  // 3. Activate Founder Agreement
+  await eventStore.append({
+    type: 'AgreementStatusChanged',
+    aggregateType: 'Agreement' as any,
+    aggregateId: founderAgreementId,
+    aggregateVersion: 2,
+    actor: { type: 'System', systemId: 'bootstrap-founder' } as ActorReference,
+    timestamp: now,
+    payload: {
+      type: 'AgreementStatusChanged',
+      previousStatus: 'Proposed',
+      newStatus: 'Active',
+    },
+  });
+  console.log(`✅ Founder agreement activated: ${founderAgreementId}`);
+  
+  // 4. Create Platform Access Agreement (for chat access)
+  await eventStore.append({
+    type: 'AgreementProposed',
+    aggregateType: 'Agreement' as any,
+    aggregateId: platformAccessAgreementId,
+    aggregateVersion: 1,
+    actor: { type: 'System', systemId: 'bootstrap-founder' } as ActorReference,
+    timestamp: now,
+    payload: {
+      type: 'AgreementProposed',
+      agreementType: 'platform-access',
+      parties: [
+        { entityId: PRIMORDIAL_SYSTEM_ID, role: 'Platform', consent: { givenAt: now, method: 'Implicit' } },
+        { entityId: founderId, role: 'User', consent: { givenAt: now, method: 'Implicit' } },
+      ],
+      terms: {
+        description: `Platform access for ${request.name}`,
+        roleType: 'PlatformUser',
+      },
+      validity: { effectiveFrom: now },
+    },
+  });
+  
+  await eventStore.append({
+    type: 'AgreementStatusChanged',
+    aggregateType: 'Agreement' as any,
+    aggregateId: platformAccessAgreementId,
+    aggregateVersion: 2,
+    actor: { type: 'System', systemId: 'bootstrap-founder' } as ActorReference,
+    timestamp: now,
+    payload: {
+      type: 'AgreementStatusChanged',
+      previousStatus: 'Proposed',
+      newStatus: 'Active',
+    },
+  });
+  console.log(`✅ Platform access granted`);
+  
+  // 5. Optionally create Realm
+  let realmId: EntityId | undefined;
+  if (request.realmName) {
+    realmId = generateId('realm') as EntityId;
+    const realmAgreementId = generateId('agr-realm') as EntityId;
+    
+    // Create Realm Container
+    await eventStore.append({
+      type: 'ContainerCreated',
+      aggregateType: 'Container' as any,
+      aggregateId: realmId,
+      aggregateVersion: 1,
+      actor: { type: 'Entity', entityId: founderId } as ActorReference,
+      timestamp: now,
+      payload: {
+        type: 'ContainerCreated',
+        name: request.realmName,
+        containerType: 'Realm',
+        physics: {
+          fungibility: 'Strict',
+          topology: 'Subjects',
+          permeability: 'Gated',
+          execution: 'Full',
+        },
+        governanceAgreementId: founderAgreementId,
+        realmId: PRIMORDIAL_REALM_ID,
+        ownerId: founderId,
+      },
+    });
+    console.log(`✅ Realm created: ${request.realmName} (${realmId})`);
+    
+    // Create TenantAdmin Agreement for Founder in this Realm
+    await eventStore.append({
+      type: 'AgreementProposed',
+      aggregateType: 'Agreement' as any,
+      aggregateId: realmAgreementId,
+      aggregateVersion: 1,
+      actor: { type: 'System', systemId: 'bootstrap-founder' } as ActorReference,
+      timestamp: now,
+      payload: {
+        type: 'AgreementProposed',
+        agreementType: 'realm-admin',
+        parties: [
+          { entityId: PRIMORDIAL_SYSTEM_ID, role: 'System', consent: { givenAt: now, method: 'Implicit' } },
+          { entityId: founderId, role: 'TenantAdmin', consent: { givenAt: now, method: 'Implicit' } },
+        ],
+        terms: {
+          description: `Admin access to ${request.realmName}`,
+          roleType: 'TenantAdmin',
+          scope: { type: 'Realm', targetId: realmId },
+        },
+        validity: { effectiveFrom: now },
+      },
+    });
+    
+    await eventStore.append({
+      type: 'AgreementStatusChanged',
+      aggregateType: 'Agreement' as any,
+      aggregateId: realmAgreementId,
+      aggregateVersion: 2,
+      actor: { type: 'System', systemId: 'bootstrap-founder' } as ActorReference,
+      timestamp: now,
+      payload: {
+        type: 'AgreementStatusChanged',
+        previousStatus: 'Proposed',
+        newStatus: 'Active',
+      },
+    });
+    console.log(`✅ TenantAdmin role granted for realm`);
+  }
+  
+  // 6. Create API Key
+  const apiKeyData = await createApiKey({
+    realmId: realmId || PRIMORDIAL_REALM_ID,
+    entityId: founderId,
+    name: `${request.name} - Founder Key`,
+    scopes: ['*'], // Full access
+  }, eventStore);
+  console.log(`✅ API Key created: ${apiKeyData.key.slice(0, 15)}...`);
+  
+  console.log(`\n═══ FOUNDER BOOTSTRAP COMPLETE ═══\n`);
+  
+  return {
+    founderId,
+    founderAgreementId,
+    realmId,
+    apiKey: apiKeyData.key,
+    message: `Founder ${request.name} created successfully with ${realmId ? `realm ${request.realmName}` : 'global access'}`,
+  };
+}
+
+/**
+ * Check if a Founder already exists in the system
+ */
+async function findExistingFounder(eventStore: any): Promise<{ id: EntityId; name: string } | null> {
+  const pool = eventStore.getPool?.();
+  if (!pool) return null;
+  
+  try {
+    const result = await pool.query(`
+      SELECT e.aggregate_id, e.payload
+      FROM events e
+      WHERE e.aggregate_type = 'Party'
+        AND e.event_type = 'EntityCreated'
+        AND (e.payload->'meta'->>'isFounder')::boolean = true
+      LIMIT 1
+    `);
+    
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      return {
+        id: row.aggregate_id as EntityId,
+        name: row.payload?.identity?.name || 'Unknown',
+      };
+    }
+  } catch (err) {
+    console.warn('Could not check for existing founder:', err);
   }
   
   return null;

@@ -848,6 +848,74 @@ export const SESSION_TYPE: AgreementTypeDefinition = {
   },
 };
 
+/**
+ * Platform Access Agreement - the "onboarding bundle"
+ * 
+ * This is the foundational agreement created when a user registers.
+ * It grants basic platform access including:
+ * - Chat/AI interaction
+ * - Session creation
+ * - Basic realm membership
+ * 
+ * Think of this as the "Terms of Service" agreement that every user
+ * implicitly accepts when they sign up.
+ */
+export const PLATFORM_ACCESS_TYPE: AgreementTypeDefinition = {
+  id: 'platform-access',
+  name: 'Platform Access Agreement',
+  description: 'Foundational agreement granting basic platform access including chat and AI interactions',
+  version: 1,
+  allowedRealms: 'all',
+  
+  requiredParticipants: [
+    {
+      role: 'Platform',
+      description: 'The platform/system granting access',
+      minCount: 1,
+      maxCount: 1,
+      allowedEntityTypes: ['System'],
+      requiresConsent: false, // Platform auto-consents
+    },
+    {
+      role: 'User',
+      description: 'The user being granted platform access',
+      minCount: 1,
+      maxCount: 1,
+      allowedEntityTypes: ['Person', 'Organization'],
+      requiresConsent: true,
+      consentMethods: ['Implicit', 'Digital'], // Implicit by signing up
+    },
+  ],
+  
+  grantsRoles: [
+    {
+      participantRole: 'User',
+      roleType: 'PlatformUser',
+      scope: { type: 'Global' },
+      validity: 'agreement',
+      permissions: [
+        { action: 'use', resource: 'Chat:*' },
+        { action: 'create', resource: 'Session:*' },
+        { action: 'read', resource: 'Affordances:*' },
+        { action: 'read', resource: 'Entity:self' },
+        { action: 'update', resource: 'Entity:self' },
+      ],
+      delegatable: false,
+    },
+  ],
+  
+  hooks: {
+    onActivated: [
+      { type: 'GrantPlatformAccess', config: {} },
+      { type: 'CreateApiKey', config: { 
+        nameFrom: 'parties.User.name',
+        scopes: ['read', 'write'],
+        forParticipant: 'User',
+      }},
+    ],
+  },
+};
+
 export const BUILT_IN_AGREEMENT_TYPES: readonly AgreementTypeDefinition[] = [
   GENESIS_AGREEMENT_TYPE,
   TENANT_LICENSE_TYPE,
@@ -860,6 +928,7 @@ export const BUILT_IN_AGREEMENT_TYPES: readonly AgreementTypeDefinition[] = [
   WORKSPACE_MEMBERSHIP_TYPE,
   WORKSPACE_EXECUTION_TYPE,
   SESSION_TYPE,
+  PLATFORM_ACCESS_TYPE,
 ];
 
 /**

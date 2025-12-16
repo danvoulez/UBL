@@ -296,6 +296,9 @@ export interface AuthConfig {
     issuer: string;
     audience: string;
   };
+  
+  /** Event Store for persistent API key validation (optional) */
+  eventStore?: any;
 }
 
 const DEFAULT_CONFIG: AuthConfig = {
@@ -563,6 +566,52 @@ export function createAuthenticationEngine(
     },
     
     async verifyApiKey(key) {
+      // First, try Event Store if available (persistent API keys)
+      if (cfg.eventStore) {
+        const keyHash = Buffer.from(key).toString('base64');
+        
+        // Find ApiKeyCreated event with matching hash
+        for await (const event of cfg.eventStore.getBySequence(1n)) {
+          if (event.type === 'ApiKeyCreated') {
+            const payload = event.payload as any;
+            if (payload.keyHash === keyHash) {
+              const keyId = event.aggregateId;
+              
+              // Check if revoked
+              let isRevoked = false;
+              for await (const revokeEvent of cfg.eventStore.getByAggregate('ApiKey' as any, keyId)) {
+                if (revokeEvent.type === 'ApiKeyRevoked') {
+                  isRevoked = true;
+                  break;
+                }
+              }
+              
+              if (isRevoked) return null;
+              
+              // Check expiration
+              if (payload.expiresAt && Date.now() > payload.expiresAt) {
+                return null;
+              }
+              
+              // Return API key info
+              return {
+                id: keyId,
+                entityId: payload.entityId as EntityId,
+                name: payload.name,
+                keyPrefix: key.slice(0, 10),
+                keyHash,
+                scopes: payload.scopes || [],
+                createdAt: event.timestamp as Timestamp,
+                expiresAt: payload.expiresAt,
+                revoked: false,
+                metadata: { createdBy: payload.entityId },
+              } as ApiKey;
+            }
+          }
+        }
+      }
+      
+      // Fallback to in-memory storage
       const keyHash = btoa(key); // In production: proper hashing
       const apiKey = apiKeys.get(keyHash);
       

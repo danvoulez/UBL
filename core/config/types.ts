@@ -22,6 +22,9 @@ export interface Config {
     anthropicApiKey?: string;
     openaiApiKey?: string;
     geminiApiKey?: string;
+    ollamaBaseUrl?: string;
+    ollamaApiKey?: string;
+    ollamaModel?: string;
   };
   redis: {
     url?: string;
