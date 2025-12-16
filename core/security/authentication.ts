@@ -578,9 +578,9 @@ export function createAuthenticationEngine(
             if (payload.keyHash === keyHash || payload.key === key) {
               const keyId = event.aggregateId;
               
-              // Check if revoked
+              // Check if revoked (aggregate type may be 'System' or 'ApiKey')
               let isRevoked = false;
-              for await (const revokeEvent of cfg.eventStore.getByAggregate('ApiKey' as any, keyId)) {
+              for await (const revokeEvent of cfg.eventStore.getByAggregate('System' as any, keyId)) {
                 if (revokeEvent.type === 'ApiKeyRevoked') {
                   isRevoked = true;
                   break;
