@@ -102,6 +102,19 @@ export {
   type OllamaConfig,
 } from './ollama';
 
+export {
+  selectModel,
+  smartSelectModel,
+  detectTaskType,
+  getAvailableModels,
+  MODEL_PROFILES,
+  type ModelProfile,
+  type TaskType,
+  type LatencyPreference,
+  type ModelSelectionRequest,
+  type ModelSelectionResult,
+} from './model-selector';
+
 // ============================================================================
 // PAYMENTS
 // ============================================================================

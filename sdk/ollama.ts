@@ -25,6 +25,7 @@ import type {
   AdapterConfig,
   AdapterHealth,
 } from './types';
+import { smartSelectModel, detectTaskType, type LatencyPreference } from './model-selector';
 
 export interface OllamaConfig extends AdapterConfig {
   credentials: {
@@ -34,6 +35,8 @@ export interface OllamaConfig extends AdapterConfig {
     baseUrl?: string;
     model?: string;
     keepAlive?: string;  // e.g., "24h"
+    smartModelSelection?: boolean;  // Enable intelligent model selection
+    latencyPreference?: LatencyPreference;  // 'fastest' | 'balanced' | 'quality'
   };
 }
 
@@ -144,7 +147,22 @@ export function createOllamaAdapter(): LLMAdapter {
     
     async complete(request: LLMRequest): Promise<LLMResponse> {
       const baseUrl = config?.options?.baseUrl ?? defaultBaseUrl;
-      const model = config?.options?.model ?? defaultModel;
+      const smartSelection = config?.options?.smartModelSelection ?? false;
+      const latencyPref = config?.options?.latencyPreference ?? 'balanced';
+      
+      // Smart model selection based on message content
+      let model = config?.options?.model ?? defaultModel;
+      let selectionReason = '';
+      
+      if (smartSelection) {
+        const lastMessage = request.messages[request.messages.length - 1];
+        const userContent = lastMessage?.content ?? '';
+        
+        const selection = await smartSelectModel(userContent, latencyPref, baseUrl);
+        model = selection.model;
+        selectionReason = selection.reason;
+        console.log(`🧠 Smart model selection: ${model} (${selectionReason})`);
+      }
       
       try {
         const headers: Record<string, string> = {
@@ -205,7 +223,19 @@ export function createOllamaAdapter(): LLMAdapter {
     
     async *stream(request: LLMRequest): AsyncIterable<LLMChunk> {
       const baseUrl = config?.options?.baseUrl ?? defaultBaseUrl;
-      const model = config?.options?.model ?? defaultModel;
+      const smartSelection = config?.options?.smartModelSelection ?? false;
+      const latencyPref = config?.options?.latencyPreference ?? 'balanced';
+      
+      // Smart model selection
+      let model = config?.options?.model ?? defaultModel;
+      
+      if (smartSelection) {
+        const lastMessage = request.messages[request.messages.length - 1];
+        const userContent = lastMessage?.content ?? '';
+        const selection = await smartSelectModel(userContent, latencyPref, baseUrl);
+        model = selection.model;
+        console.log(`🧠 Smart model selection (stream): ${model}`);
+      }
       
       try {
         const headers: Record<string, string> = {

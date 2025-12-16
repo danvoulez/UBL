@@ -100,12 +100,19 @@ export function createAntenna(config: AntennaConfig): AntennaInstance {
         if (ollamaBaseUrl || ollamaApiKey) {
           // Ollama configured (local or remote)
           console.log('🤖 Using Ollama:', ollamaBaseUrl || 'http://localhost:11434');
+          const smartModelSelection = process.env.OLLAMA_SMART_MODEL !== 'false';  // Enabled by default
+          const latencyPreference = (process.env.OLLAMA_LATENCY_PREF || 'balanced') as 'fastest' | 'balanced' | 'quality';
+          if (smartModelSelection) {
+            console.log(`🧠 Smart model selection: ON (preference: ${latencyPreference})`);
+          }
           llmAdapter = createOllamaAdapter();
           await llmAdapter.initialize({
             credentials: { apiKey: ollamaApiKey },
             options: { 
               baseUrl: ollamaBaseUrl || 'http://localhost:11434',
-              model: ollamaModel || 'llama3.1:8b',
+              model: ollamaModel || 'llama3.1:8b',  // Default fallback
+              smartModelSelection,
+              latencyPreference,
             },
           });
         } else if (anthropicKey && anthropicKey !== 'your-anthropic-api-key') {
