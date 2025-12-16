@@ -570,11 +570,12 @@ export function createAuthenticationEngine(
       if (cfg.eventStore) {
         const keyHash = Buffer.from(key).toString('base64');
         
-        // Find ApiKeyCreated event with matching hash
+        // Find ApiKeyCreated event with matching hash or key
         for await (const event of cfg.eventStore.getBySequence(1n)) {
           if (event.type === 'ApiKeyCreated') {
             const payload = event.payload as any;
-            if (payload.keyHash === keyHash) {
+            // Support both keyHash (new format) and key (bootstrap format)
+            if (payload.keyHash === keyHash || payload.key === key) {
               const keyId = event.aggregateId;
               
               // Check if revoked
