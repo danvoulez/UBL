@@ -27,7 +27,7 @@ CREATE TABLE events (
     
     -- Aggregate reference
     aggregate_id    TEXT NOT NULL,  -- Changed from UUID to TEXT to support custom IDs (ent-xxx, agr-xxx, etc.)
-    aggregate_type  TEXT NOT NULL CHECK (aggregate_type IN ('Party', 'Asset', 'Agreement', 'Role', 'Workflow', 'Flow', 'System', 'Realm', 'Container')),
+    aggregate_type  TEXT NOT NULL CHECK (aggregate_type IN ('Party', 'Asset', 'Agreement', 'Role', 'Workflow', 'Flow', 'System', 'Realm', 'Container', 'Entity', 'File', 'Repository', 'Session', 'Function', 'Workspace', 'SagaExecution', 'Authentication')),
     aggregate_version INT NOT NULL,
     
     -- Event payload (JSONB for queryability)
