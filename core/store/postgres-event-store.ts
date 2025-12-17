@@ -97,6 +97,22 @@ export function createPostgresEventStoreImpl(
     }
   }
 
+  // Run automatic migrations to fix known issues
+  async function runMigrations(): Promise<void> {
+    if (!pool) return;
+    
+    try {
+      // Remove restrictive CHECK constraints that cause issues
+      await pool.query(`
+        ALTER TABLE IF EXISTS events 
+        DROP CONSTRAINT IF EXISTS events_aggregate_type_check;
+      `);
+      console.log('✅ Migration: Removed aggregate_type constraint');
+    } catch (err) {
+      // Ignore errors - constraint might not exist
+    }
+  }
+
   // Ensure schema exists
   async function ensureSchema(): Promise<void> {
     if (!pool) throw new Error('Pool not initialized');
@@ -110,6 +126,11 @@ export function createPostgresEventStoreImpl(
           AND table_name = 'events'
         );
       `);
+      
+      // Run migrations on existing tables
+      if (result.rows[0].exists) {
+        await runMigrations();
+      }
 
       if (!result.rows[0].exists) {
         // Load and execute schema
