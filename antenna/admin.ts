@@ -337,12 +337,12 @@ export async function getRealm(
     return null;
   }
   
-  // Read RealmCreated events for this realm
-  // Realms use 'Flow' as aggregate type (as per ORIGINAL)
+  // Read ContainerCreated events for this realm
+  // Realms are Containers with Realm physics
   const events: any[] = [];
-  for await (const event of eventStore.getByAggregate('Flow' as any, realmId)) {
+  for await (const event of eventStore.getByAggregate('Container' as any, realmId)) {
     events.push(event);
-    if (event.type === 'RealmCreated') {
+    if (event.type === 'ContainerCreated') {
       const payload = event.payload as any;
       return {
         id: realmId,
