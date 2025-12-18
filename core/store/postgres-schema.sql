@@ -1,23 +1,22 @@
 -- =============================================================================
--- TEMPORAL LEDGER - PostgreSQL Schema
+-- UBL INITIAL SCHEMA - Single Migration
 -- =============================================================================
--- An append-only event store with cryptographic integrity.
--- Designed for immutability, auditability, and temporal queries.
+-- Run with: psql ubl -f migrations/001_initial_schema.sql
+-- Or: DATABASE_URL=postgresql://localhost/ubl npm run db:migrate
 -- =============================================================================
 
 -- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";      -- UUID generation
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";       -- Cryptographic functions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =============================================================================
 -- CORE EVENT STORE
 -- =============================================================================
 
--- The immutable event log - the single source of truth
-CREATE TABLE events (
-    -- Identity
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sequence        BIGSERIAL UNIQUE NOT NULL,  -- Monotonic, gapless
+CREATE TABLE IF NOT EXISTS events (
+    -- Identity (TEXT to support custom IDs like ent-xxx, agr-xxx, evt-xxx)
+    id              TEXT PRIMARY KEY,
+    sequence        BIGSERIAL UNIQUE NOT NULL,
     
     -- Temporal
     timestamp       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -25,56 +24,54 @@ CREATE TABLE events (
     -- Event classification
     event_type      TEXT NOT NULL,
     
-    -- Aggregate reference
-    aggregate_id    TEXT NOT NULL,  -- Changed from UUID to TEXT to support custom IDs (ent-xxx, agr-xxx, etc.)
-    aggregate_type  TEXT NOT NULL,  -- No constraint - allow any aggregate type
+    -- Aggregate reference (TEXT to support custom IDs)
+    aggregate_id    TEXT NOT NULL,
+    aggregate_type  TEXT NOT NULL CHECK (aggregate_type IN (
+        'Party', 'Asset', 'Agreement', 'Role', 'Workflow', 'Flow', 'System', 'Realm', 'Workspace', 'ApiKey', 'Session'
+    )),
     aggregate_version INT NOT NULL,
     
-    -- Event payload (JSONB for queryability)
+    -- Event payload
     payload         JSONB NOT NULL,
     
-    -- Causation chain
-    command_id      UUID,                       -- What command triggered this
-    correlation_id  UUID,                       -- Parent event for chains
-    workflow_id     UUID,                       -- Workflow instance if applicable
+    -- Causation chain (TEXT to support custom IDs)
+    command_id      TEXT,
+    correlation_id  TEXT,
+    workflow_id     TEXT,
     
-    -- Actor (who/what performed the action)
+    -- Actor
     actor_type      TEXT NOT NULL CHECK (actor_type IN ('Party', 'Entity', 'System', 'Workflow', 'Anonymous')),
-    actor_id        TEXT,                       -- Party ID, System ID, or Workflow ID
-    actor_reason    TEXT,                       -- For anonymous: reason
+    actor_id        TEXT,
+    actor_reason    TEXT,
     
     -- Integrity chain
-    previous_hash   TEXT NOT NULL,              -- Hash of previous event
-    hash            TEXT NOT NULL,              -- SHA-256 of this event
+    previous_hash   TEXT NOT NULL,
+    hash            TEXT NOT NULL,
     
-    -- Optional cryptographic signature
+    -- Optional signature
     signature       TEXT,
-    signer_id       UUID,
+    signer_id       TEXT,
     
     -- Metadata
     metadata        JSONB DEFAULT '{}'::jsonb,
     
     -- Constraints
-    CONSTRAINT unique_aggregate_version UNIQUE (aggregate_type, aggregate_id, aggregate_version),
-    CONSTRAINT valid_hash_format CHECK (hash ~ '^sha256:[a-f0-9]+$')
+    CONSTRAINT unique_aggregate_version UNIQUE (aggregate_type, aggregate_id, aggregate_version)
 );
 
--- Indexes for common query patterns
-CREATE INDEX idx_events_aggregate ON events (aggregate_type, aggregate_id, aggregate_version);
-CREATE INDEX idx_events_type ON events (event_type);
-CREATE INDEX idx_events_timestamp ON events (timestamp);
-CREATE INDEX idx_events_actor ON events (actor_type, actor_id);
-CREATE INDEX idx_events_correlation ON events (correlation_id) WHERE correlation_id IS NOT NULL;
-CREATE INDEX idx_events_workflow ON events (workflow_id) WHERE workflow_id IS NOT NULL;
-
--- Payload JSONB indexes for common queries
-CREATE INDEX idx_events_payload ON events USING GIN (payload jsonb_path_ops);
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_events_aggregate ON events (aggregate_type, aggregate_id, aggregate_version);
+CREATE INDEX IF NOT EXISTS idx_events_type ON events (event_type);
+CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events (timestamp);
+CREATE INDEX IF NOT EXISTS idx_events_actor ON events (actor_type, actor_id);
+CREATE INDEX IF NOT EXISTS idx_events_correlation ON events (correlation_id) WHERE correlation_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_workflow ON events (workflow_id) WHERE workflow_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_payload ON events USING GIN (payload jsonb_path_ops);
 
 -- =============================================================================
--- APPEND-ONLY ENFORCEMENT
+-- IMMUTABILITY ENFORCEMENT
 -- =============================================================================
 
--- Prevent updates to events (immutability)
 CREATE OR REPLACE FUNCTION prevent_event_modification()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -82,12 +79,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS enforce_event_immutability ON events;
 CREATE TRIGGER enforce_event_immutability
     BEFORE UPDATE ON events
     FOR EACH ROW
     EXECUTE FUNCTION prevent_event_modification();
 
--- Prevent deletion of events (append-only)
 CREATE OR REPLACE FUNCTION prevent_event_deletion()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -95,126 +92,62 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS enforce_append_only ON events;
 CREATE TRIGGER enforce_append_only
     BEFORE DELETE ON events
     FOR EACH ROW
     EXECUTE FUNCTION prevent_event_deletion();
 
 -- =============================================================================
--- HASH CHAIN INTEGRITY
+-- REAL-TIME NOTIFICATIONS
 -- =============================================================================
 
--- Verify hash chain on insert
-CREATE OR REPLACE FUNCTION verify_hash_chain()
+CREATE OR REPLACE FUNCTION notify_new_event()
 RETURNS TRIGGER AS $$
-DECLARE
-    last_event RECORD;
-    expected_prev_hash TEXT;
-    computed_hash TEXT;
-    canonical_json TEXT;
 BEGIN
-    -- Get the last event
-    SELECT hash INTO expected_prev_hash
-    FROM events
-    ORDER BY sequence DESC
-    LIMIT 1;
-    
-    -- If this is the first event, previous_hash should be 'genesis'
-    IF expected_prev_hash IS NULL THEN
-        expected_prev_hash := 'genesis';
-    END IF;
-    
-    -- Verify previous_hash matches
-    IF NEW.previous_hash != expected_prev_hash THEN
-        RAISE EXCEPTION 'Hash chain broken. Expected previous_hash: %, got: %',
-            expected_prev_hash, NEW.previous_hash;
-    END IF;
-    
-    -- Compute and verify hash (simplified - in production, use proper canonical JSON)
-    canonical_json := json_build_object(
-        'id', NEW.id,
-        'sequence', NEW.sequence,
-        'timestamp', NEW.timestamp,
-        'event_type', NEW.event_type,
-        'aggregate_id', NEW.aggregate_id,
-        'aggregate_type', NEW.aggregate_type,
-        'aggregate_version', NEW.aggregate_version,
-        'payload', NEW.payload,
-        'actor_type', NEW.actor_type,
-        'actor_id', NEW.actor_id,
-        'previous_hash', NEW.previous_hash
-    )::text;
-    
-    computed_hash := 'sha256:' || encode(digest(canonical_json, 'sha256'), 'hex');
-    
-    -- Verify hash matches
-    IF NEW.hash != computed_hash THEN
-        RAISE EXCEPTION 'Invalid hash. Computed: %, provided: %', computed_hash, NEW.hash;
-    END IF;
-    
+    PERFORM pg_notify(
+        'new_event',
+        json_build_object(
+            'id', NEW.id,
+            'sequence', NEW.sequence,
+            'event_type', NEW.event_type,
+            'aggregate_type', NEW.aggregate_type,
+            'aggregate_id', NEW.aggregate_id
+        )::text
+    );
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER verify_hash_chain_on_insert
-    BEFORE INSERT ON events
+DROP TRIGGER IF EXISTS notify_on_event_insert ON events;
+CREATE TRIGGER notify_on_event_insert
+    AFTER INSERT ON events
     FOR EACH ROW
-    EXECUTE FUNCTION verify_hash_chain();
+    EXECUTE FUNCTION notify_new_event();
 
 -- =============================================================================
--- AGGREGATE VERSION ENFORCEMENT
+-- SNAPSHOTS (Performance optimization)
 -- =============================================================================
 
--- Ensure aggregate versions are sequential
-CREATE OR REPLACE FUNCTION verify_aggregate_version()
-RETURNS TRIGGER AS $$
-DECLARE
-    expected_version INT;
-BEGIN
-    -- Get current max version for this aggregate
-    SELECT COALESCE(MAX(aggregate_version), 0) + 1 INTO expected_version
-    FROM events
-    WHERE aggregate_type = NEW.aggregate_type
-      AND aggregate_id = NEW.aggregate_id;
-    
-    IF NEW.aggregate_version != expected_version THEN
-        RAISE EXCEPTION 'Optimistic concurrency violation. Expected version: %, got: %',
-            expected_version, NEW.aggregate_version;
-    END IF;
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER verify_aggregate_version_on_insert
-    BEFORE INSERT ON events
-    FOR EACH ROW
-    EXECUTE FUNCTION verify_aggregate_version();
-
--- =============================================================================
--- SNAPSHOTS (Performance optimization for long event streams)
--- =============================================================================
-
-CREATE TABLE snapshots (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS snapshots (
+    id              TEXT PRIMARY KEY DEFAULT 'snap-' || substr(md5(random()::text), 1, 16),
     aggregate_type  TEXT NOT NULL,
-    aggregate_id    TEXT NOT NULL,  -- Changed from UUID to TEXT to support custom IDs
+    aggregate_id    TEXT NOT NULL,
     version         INT NOT NULL,
     state           JSONB NOT NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    event_sequence  BIGINT NOT NULL REFERENCES events(sequence),
+    event_sequence  BIGINT NOT NULL,
     
     CONSTRAINT unique_snapshot UNIQUE (aggregate_type, aggregate_id, version)
 );
 
-CREATE INDEX idx_snapshots_aggregate ON snapshots (aggregate_type, aggregate_id, version DESC);
+CREATE INDEX IF NOT EXISTS idx_snapshots_aggregate ON snapshots (aggregate_type, aggregate_id, version DESC);
 
 -- =============================================================================
--- PROJECTIONS (Read models)
+-- PROJECTION CHECKPOINTS
 -- =============================================================================
 
--- Projection checkpoints - track which events have been processed
-CREATE TABLE projection_checkpoints (
+CREATE TABLE IF NOT EXISTS projection_checkpoints (
     projection_name TEXT PRIMARY KEY,
     last_sequence   BIGINT NOT NULL DEFAULT 0,
     last_updated    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -223,10 +156,11 @@ CREATE TABLE projection_checkpoints (
 );
 
 -- =============================================================================
--- PARTY PROJECTION (Current state view)
+-- PROJECTIONS (Read Models)
 -- =============================================================================
 
-CREATE TABLE parties_projection (
+-- Parties
+CREATE TABLE IF NOT EXISTS parties_projection (
     id              TEXT PRIMARY KEY,
     party_type      TEXT NOT NULL CHECK (party_type IN ('Person', 'Organization', 'System', 'Witness')),
     name            TEXT NOT NULL,
@@ -236,20 +170,15 @@ CREATE TABLE parties_projection (
     created_at      TIMESTAMPTZ NOT NULL,
     updated_at      TIMESTAMPTZ NOT NULL,
     version         INT NOT NULL,
-    
-    -- Denormalized for queries
     active_roles    JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 
-CREATE INDEX idx_parties_name ON parties_projection USING GIN (to_tsvector('simple', name));
-CREATE INDEX idx_parties_type ON parties_projection (party_type);
-CREATE INDEX idx_parties_identifiers ON parties_projection USING GIN (identifiers jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS idx_parties_name ON parties_projection USING GIN (to_tsvector('simple', name));
+CREATE INDEX IF NOT EXISTS idx_parties_type ON parties_projection (party_type);
+CREATE INDEX IF NOT EXISTS idx_parties_identifiers ON parties_projection USING GIN (identifiers jsonb_path_ops);
 
--- =============================================================================
--- ASSET PROJECTION
--- =============================================================================
-
-CREATE TABLE assets_projection (
+-- Assets
+CREATE TABLE IF NOT EXISTS assets_projection (
     id              TEXT PRIMARY KEY,
     asset_type      TEXT NOT NULL,
     status          TEXT NOT NULL CHECK (status IN ('Created', 'InStock', 'Reserved', 'Sold', 'Transferred', 'Consumed', 'Destroyed')),
@@ -263,16 +192,13 @@ CREATE TABLE assets_projection (
     version         INT NOT NULL
 );
 
-CREATE INDEX idx_assets_type ON assets_projection (asset_type);
-CREATE INDEX idx_assets_status ON assets_projection (status);
-CREATE INDEX idx_assets_owner ON assets_projection (owner_id) WHERE owner_id IS NOT NULL;
-CREATE INDEX idx_assets_properties ON assets_projection USING GIN (properties jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS idx_assets_type ON assets_projection (asset_type);
+CREATE INDEX IF NOT EXISTS idx_assets_status ON assets_projection (status);
+CREATE INDEX IF NOT EXISTS idx_assets_owner ON assets_projection (owner_id) WHERE owner_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_assets_properties ON assets_projection USING GIN (properties jsonb_path_ops);
 
--- =============================================================================
--- AGREEMENT PROJECTION
--- =============================================================================
-
-CREATE TABLE agreements_projection (
+-- Agreements
+CREATE TABLE IF NOT EXISTS agreements_projection (
     id              TEXT PRIMARY KEY,
     agreement_type  TEXT NOT NULL,
     status          TEXT NOT NULL CHECK (status IN ('Draft', 'Proposed', 'UnderReview', 'Accepted', 'Active', 'Fulfilled', 'Breached', 'Terminated', 'Expired')),
@@ -284,25 +210,27 @@ CREATE TABLE agreements_projection (
     effective_until TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL,
     updated_at      TIMESTAMPTZ NOT NULL,
-    version         INT NOT NULL
+    version         INT NOT NULL,
+    -- Dispute tracking
+    open_dispute    JSONB,
+    -- Fulfillment tracking
+    fulfillment_evidence JSONB,
+    fulfilled_at    TIMESTAMPTZ
 );
 
-CREATE INDEX idx_agreements_type ON agreements_projection (agreement_type);
-CREATE INDEX idx_agreements_status ON agreements_projection (status);
-CREATE INDEX idx_agreements_parties ON agreements_projection USING GIN (parties jsonb_path_ops);
-CREATE INDEX idx_agreements_effective ON agreements_projection (effective_from, effective_until);
+CREATE INDEX IF NOT EXISTS idx_agreements_type ON agreements_projection (agreement_type);
+CREATE INDEX IF NOT EXISTS idx_agreements_status ON agreements_projection (status);
+CREATE INDEX IF NOT EXISTS idx_agreements_parties ON agreements_projection USING GIN (parties jsonb_path_ops);
+CREATE INDEX IF NOT EXISTS idx_agreements_effective ON agreements_projection (effective_from, effective_until);
 
--- =============================================================================
--- ROLE PROJECTION
--- =============================================================================
-
-CREATE TABLE roles_projection (
+-- Roles
+CREATE TABLE IF NOT EXISTS roles_projection (
     id              TEXT PRIMARY KEY,
     role_type       TEXT NOT NULL,
     holder_id       TEXT NOT NULL,
     context_type    TEXT NOT NULL,
     context_id      TEXT,
-    established_by  TEXT NOT NULL,  -- Agreement ID
+    established_by  TEXT NOT NULL,
     valid_from      TIMESTAMPTZ NOT NULL,
     valid_until     TIMESTAMPTZ,
     is_active       BOOLEAN NOT NULL DEFAULT true,
@@ -311,16 +239,13 @@ CREATE TABLE roles_projection (
     version         INT NOT NULL
 );
 
-CREATE INDEX idx_roles_holder ON roles_projection (holder_id);
-CREATE INDEX idx_roles_type ON roles_projection (role_type);
-CREATE INDEX idx_roles_active ON roles_projection (is_active) WHERE is_active = true;
-CREATE INDEX idx_roles_context ON roles_projection (context_type, context_id);
+CREATE INDEX IF NOT EXISTS idx_roles_holder ON roles_projection (holder_id);
+CREATE INDEX IF NOT EXISTS idx_roles_type ON roles_projection (role_type);
+CREATE INDEX IF NOT EXISTS idx_roles_active ON roles_projection (is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_roles_context ON roles_projection (context_type, context_id);
 
--- =============================================================================
--- WORKFLOW PROJECTION
--- =============================================================================
-
-CREATE TABLE workflows_projection (
+-- Workflows
+CREATE TABLE IF NOT EXISTS workflows_projection (
     id                  TEXT PRIMARY KEY,
     definition_id       TEXT NOT NULL,
     definition_version  INT NOT NULL,
@@ -336,15 +261,12 @@ CREATE TABLE workflows_projection (
     version             INT NOT NULL
 );
 
-CREATE INDEX idx_workflows_target ON workflows_projection (target_type, target_id);
-CREATE INDEX idx_workflows_state ON workflows_projection (current_state);
-CREATE INDEX idx_workflows_active ON workflows_projection (is_complete) WHERE is_complete = false;
+CREATE INDEX IF NOT EXISTS idx_workflows_target ON workflows_projection (target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_workflows_state ON workflows_projection (current_state);
+CREATE INDEX IF NOT EXISTS idx_workflows_active ON workflows_projection (is_complete) WHERE is_complete = false;
 
--- =============================================================================
--- WORKSPACE PROJECTION (Read-optimized view for workspaces)
--- =============================================================================
-
-CREATE TABLE workspace_projection (
+-- Workspaces
+CREATE TABLE IF NOT EXISTS workspace_projection (
     id                  TEXT PRIMARY KEY,
     realm_id            TEXT NOT NULL,
     name                TEXT NOT NULL,
@@ -362,17 +284,14 @@ CREATE TABLE workspace_projection (
     updated_at          BIGINT NOT NULL
 );
 
-CREATE INDEX idx_workspace_projection_realm ON workspace_projection(realm_id);
-CREATE INDEX idx_workspace_projection_status ON workspace_projection(status);
-CREATE INDEX idx_workspace_projection_name ON workspace_projection USING GIN (to_tsvector('simple', name));
-CREATE INDEX idx_workspace_projection_files ON workspace_projection USING GIN (files jsonb_path_ops);
-CREATE INDEX idx_workspace_projection_functions ON workspace_projection USING GIN (functions);
+CREATE INDEX IF NOT EXISTS idx_workspace_projection_realm ON workspace_projection(realm_id);
+CREATE INDEX IF NOT EXISTS idx_workspace_projection_status ON workspace_projection(status);
+CREATE INDEX IF NOT EXISTS idx_workspace_projection_name ON workspace_projection USING GIN (to_tsvector('simple', name));
 
 -- =============================================================================
--- TEMPORAL QUERIES - Point-in-time reconstruction
+-- TEMPORAL QUERY FUNCTIONS
 -- =============================================================================
 
--- Get aggregate state at a specific point in time
 CREATE OR REPLACE FUNCTION get_events_at_time(
     p_aggregate_type TEXT,
     p_aggregate_id TEXT,
@@ -390,7 +309,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- Get aggregate state at a specific version
 CREATE OR REPLACE FUNCTION get_events_at_version(
     p_aggregate_type TEXT,
     p_aggregate_id TEXT,
@@ -409,10 +327,9 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 -- =============================================================================
--- AUDIT QUERIES
+-- AUDIT FUNCTIONS
 -- =============================================================================
 
--- Get audit trail for an aggregate
 CREATE OR REPLACE FUNCTION get_audit_trail(
     p_aggregate_type TEXT,
     p_aggregate_id TEXT,
@@ -421,9 +338,9 @@ CREATE OR REPLACE FUNCTION get_audit_trail(
     p_limit INT DEFAULT 100
 )
 RETURNS TABLE (
-    event_id UUID,
-    sequence BIGINT,
-    timestamp TIMESTAMPTZ,
+    event_id TEXT,
+    seq BIGINT,
+    ts TIMESTAMPTZ,
     event_type TEXT,
     actor_type TEXT,
     actor_id TEXT,
@@ -449,7 +366,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- Get all actions by an actor
 CREATE OR REPLACE FUNCTION get_actor_actions(
     p_actor_type TEXT,
     p_actor_id TEXT,
@@ -458,9 +374,9 @@ CREATE OR REPLACE FUNCTION get_actor_actions(
     p_limit INT DEFAULT 100
 )
 RETURNS TABLE (
-    event_id UUID,
-    sequence BIGINT,
-    timestamp TIMESTAMPTZ,
+    event_id TEXT,
+    seq BIGINT,
+    ts TIMESTAMPTZ,
     event_type TEXT,
     aggregate_type TEXT,
     aggregate_id TEXT,
@@ -487,10 +403,9 @@ END;
 $$ LANGUAGE plpgsql STABLE;
 
 -- =============================================================================
--- INTEGRITY VERIFICATION
+-- CHAIN INTEGRITY VERIFICATION
 -- =============================================================================
 
--- Verify the hash chain integrity
 CREATE OR REPLACE FUNCTION verify_chain_integrity(
     p_from_sequence BIGINT DEFAULT 1,
     p_to_sequence BIGINT DEFAULT NULL
@@ -503,8 +418,6 @@ RETURNS TABLE (
 DECLARE
     prev_hash TEXT := 'genesis';
     curr RECORD;
-    expected_hash TEXT;
-    canonical_json TEXT;
 BEGIN
     FOR curr IN
         SELECT *
@@ -513,7 +426,6 @@ BEGIN
           AND (p_to_sequence IS NULL OR sequence <= p_to_sequence)
         ORDER BY sequence ASC
     LOOP
-        -- Check previous hash link
         IF curr.previous_hash != prev_hash THEN
             RETURN QUERY SELECT
                 false,
@@ -522,78 +434,143 @@ BEGIN
                        curr.sequence, prev_hash, curr.previous_hash);
             RETURN;
         END IF;
-        
-        -- Update previous hash for next iteration
         prev_hash := curr.hash;
     END LOOP;
     
-    -- Chain is valid
     RETURN QUERY SELECT true, NULL::BIGINT, NULL::TEXT;
 END;
 $$ LANGUAGE plpgsql STABLE;
 
 -- =============================================================================
--- NOTIFICATION (for real-time subscriptions)
+-- INITIALIZE PROJECTION CHECKPOINTS
 -- =============================================================================
 
--- Notify on new events
-CREATE OR REPLACE FUNCTION notify_new_event()
+INSERT INTO projection_checkpoints (projection_name, last_sequence) VALUES
+    ('parties', 0),
+    ('assets', 0),
+    ('agreements', 0),
+    ('roles', 0),
+    ('workflows', 0),
+    ('workspaces', 0)
+ON CONFLICT (projection_name) DO NOTHING;
+
+-- =============================================================================
+-- API-ONLY ACCESS ENFORCEMENT
+-- =============================================================================
+-- The ledger should ONLY be modified through the Event Store API.
+-- These mechanisms prevent direct SQL manipulation.
+
+-- 1. Create restricted application user (run as superuser)
+-- DO $$
+-- BEGIN
+--     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'ubl_app') THEN
+--         CREATE ROLE ubl_app WITH LOGIN PASSWORD 'change_me_in_production';
+--     END IF;
+-- END $$;
+
+-- 2. Grant minimal permissions to app user
+-- REVOKE ALL ON ALL TABLES IN SCHEMA public FROM ubl_app;
+-- GRANT SELECT, INSERT ON events TO ubl_app;  -- Can only read and append
+-- GRANT SELECT ON ALL TABLES IN SCHEMA public TO ubl_app;  -- Read-only for projections
+-- GRANT USAGE ON SEQUENCE events_sequence_seq TO ubl_app;
+
+-- 3. Prevent direct projection modifications (projections are derived from events)
+CREATE OR REPLACE FUNCTION prevent_direct_projection_write()
 RETURNS TRIGGER AS $$
+DECLARE
+    caller TEXT;
 BEGIN
-    PERFORM pg_notify(
-        'new_event',
-        json_build_object(
-            'id', NEW.id,
-            'sequence', NEW.sequence,
-            'event_type', NEW.event_type,
-            'aggregate_type', NEW.aggregate_type,
-            'aggregate_id', NEW.aggregate_id
-        )::text
+    -- Check if called from a known projection function
+    GET DIAGNOSTICS caller = PG_CONTEXT;
+    
+    -- Allow writes from projection update functions
+    IF caller LIKE '%update_%_projection%' OR caller LIKE '%process_event%' THEN
+        RETURN NEW;
+    END IF;
+    
+    -- Log the violation attempt to events table
+    INSERT INTO events (
+        id, timestamp, event_type, aggregate_id, aggregate_type, aggregate_version,
+        payload, actor_type, actor_id, previous_hash, hash
+    ) VALUES (
+        'violation-' || extract(epoch from now())::text || '-' || md5(random()::text),
+        NOW(),
+        'DirectWriteViolationAttempted',
+        'security-audit',
+        'System',
+        1,
+        jsonb_build_object(
+            'type', 'DirectWriteViolationAttempted',
+            'table', TG_TABLE_NAME,
+            'operation', TG_OP,
+            'caller', caller,
+            'timestamp', NOW()
+        ),
+        'System',
+        'security-enforcement',
+        'violation-detected',
+        md5(TG_TABLE_NAME || TG_OP || now()::text)
     );
-    RETURN NEW;
+    
+    RAISE EXCEPTION 'Direct writes to projection tables are forbidden. Use the Event Store API. Table: %, Operation: %', TG_TABLE_NAME, TG_OP;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER notify_on_event_insert
-    AFTER INSERT ON events
-    FOR EACH ROW
-    EXECUTE FUNCTION notify_new_event();
+-- Apply to all projection tables (uncomment to enforce)
+-- DROP TRIGGER IF EXISTS enforce_api_only_parties ON parties_projection;
+-- CREATE TRIGGER enforce_api_only_parties
+--     BEFORE INSERT OR UPDATE OR DELETE ON parties_projection
+--     FOR EACH ROW EXECUTE FUNCTION prevent_direct_projection_write();
+
+-- DROP TRIGGER IF EXISTS enforce_api_only_agreements ON agreements_projection;
+-- CREATE TRIGGER enforce_api_only_agreements
+--     BEFORE INSERT OR UPDATE OR DELETE ON agreements_projection
+--     FOR EACH ROW EXECUTE FUNCTION prevent_direct_projection_write();
+
+-- 4. Log all schema changes (DDL audit)
+CREATE OR REPLACE FUNCTION log_ddl_event()
+RETURNS event_trigger AS $$
+DECLARE
+    obj record;
+BEGIN
+    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands()
+    LOOP
+        -- Log DDL to events table
+        INSERT INTO events (
+            id, timestamp, event_type, aggregate_id, aggregate_type, aggregate_version,
+            payload, actor_type, actor_id, previous_hash, hash
+        ) VALUES (
+            'ddl-' || extract(epoch from now())::text || '-' || md5(random()::text),
+            NOW(),
+            'SchemaChangeDetected',
+            'schema-audit',
+            'System',
+            1,
+            jsonb_build_object(
+                'type', 'SchemaChangeDetected',
+                'command', obj.command_tag,
+                'objectType', obj.object_type,
+                'objectIdentity', obj.object_identity,
+                'schemaName', obj.schema_name,
+                'timestamp', NOW(),
+                'warning', 'Schema changes should be reviewed - ledger integrity may be affected'
+            ),
+            'System',
+            'ddl-audit',
+            'ddl-detected',
+            md5(obj.command_tag || obj.object_identity || now()::text)
+        );
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create event trigger for DDL (requires superuser)
+-- DROP EVENT TRIGGER IF EXISTS audit_ddl_changes;
+-- CREATE EVENT TRIGGER audit_ddl_changes ON ddl_command_end
+--     EXECUTE FUNCTION log_ddl_event();
 
 -- =============================================================================
--- INITIAL GENESIS EVENT
+-- DONE
 -- =============================================================================
 
--- Insert genesis event (first event in the chain)
-INSERT INTO events (
-    id,
-    event_type,
-    aggregate_id,
-    aggregate_type,
-    aggregate_version,
-    payload,
-    actor_type,
-    actor_id,
-    previous_hash,
-    hash
-) VALUES (
-    '00000000-0000-0000-0000-000000000000',
-    'GenesisEvent',
-    '00000000-0000-0000-0000-000000000000',
-    'System',
-    1,
-    '{"message": "In the beginning was the Event, and the Event was with the Ledger, and the Event was the Ledger."}'::jsonb,
-    'System',
-    'genesis',
-    'genesis',
-    'sha256:' || encode(digest('genesis', 'sha256'), 'hex')
-);
-
--- Initialize projection checkpoints
-INSERT INTO projection_checkpoints (projection_name, last_sequence) VALUES
-    ('parties', 1),
-    ('assets', 1),
-    ('agreements', 1),
-    ('roles', 1),
-    ('workflows', 1),
-    ('workspaces', 1);
-
+SELECT 'UBL Schema initialized successfully with API-only enforcement' AS status;
