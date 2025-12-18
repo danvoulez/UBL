@@ -358,7 +358,7 @@ CREATE TABLE workspace_projection (
     last_activity_at    BIGINT NOT NULL,
     repositories        JSONB DEFAULT '[]'::jsonb,
     files               JSONB DEFAULT '[]'::jsonb,
-    functions           UUID[] DEFAULT ARRAY[]::UUID[],
+    functions           TEXT[] DEFAULT ARRAY[]::TEXT[],
     updated_at          BIGINT NOT NULL
 );
 
